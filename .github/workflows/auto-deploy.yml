@@ -10,6 +10,10 @@ on:
       - 'uploaded/**/*.mdx'
   workflow_dispatch:
 
+permissions:
+  contents: write
+  actions: read
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -17,6 +21,9 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        fetch-depth: 0
       
     - name: Setup Node.js
       uses: actions/setup-node@v4
@@ -38,8 +45,10 @@ jobs:
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
         git add -A
-        git diff --staged --quiet || git commit -m "🤖 Auto-update featured articles"
-        git push
+        if ! git diff --staged --quiet; then
+          git commit -m "🤖 Auto-update featured articles"
+          git push
+        fi
       
     - name: Build and Deploy to Cloudflare Workers
       run: npm run deploy
