@@ -1,0 +1,70 @@
+---
+import { Image } from 'astro:assets';
+import CategoryBadge from './CategoryBadge.astro';
+import FormattedDate from '../FormattedDate.astro';
+import type { CategoryKey } from '../../consts';
+
+export interface Props {
+  article: {
+    title: string;
+    description: string;
+    heroImage: string;
+    heroImageAlt: string;
+    category: CategoryKey;
+    pubDate: Date;
+    slug: string;
+    readingTime?: number;
+    author?: string;
+  };
+}
+
+const { article } = Astro.props;
+---
+
+<article class="hero-article">
+  <div class="hero-article__image-container">
+    <a href={`/artikel/${article.slug}`} aria-label={`Läs artikel: ${article.title}`}>
+      <Image
+        src={article.heroImage}
+        alt={article.heroImageAlt}
+        width={1200}
+        height={675}
+        class="hero-article__image"
+        loading="eager"
+        decoding="async"
+      />
+    </a>
+  </div>
+  
+  <div class="hero-article__content">
+    <div class="hero-article__category">
+      <CategoryBadge category={article.category} />
+    </div>
+    
+    <h1 class="hero-article__title">
+      <a href={`/artikel/${article.slug}`} class="hero-article__link">
+        {article.title}
+      </a>
+    </h1>
+    
+    <p class="hero-article__description">
+      {article.description}
+    </p>
+    
+    <div class="hero-article__meta">
+      <div class="hero-article__date">
+        <FormattedDate date={article.pubDate} />
+      </div>
+      {article.readingTime && (
+        <span class="hero-article__reading-time">
+          {article.readingTime} min läsning
+        </span>
+      )}
+      {article.author && (
+        <span class="hero-article__author">
+          av {article.author}
+        </span>
+      )}
+    </div>
+  </div>
+</article>

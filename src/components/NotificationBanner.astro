@@ -1,0 +1,216 @@
+---
+// NotificationBanner.astro - Apple-style notification banner
+---
+
+<div id="notification-banner" class="notification-banner" style="display: none;">
+	<div class="notification-banner__content">
+		<p class="notification-banner__text">
+			Håll dig uppdaterad med de senaste artiklarna från idag.ai.
+		</p>
+		<div class="notification-banner__actions">
+			<button 
+				class="notification-banner__button notification-banner__button--dismiss"
+				onclick="dismissNotification()"
+			>
+				Avfärda
+			</button>
+			<button 
+				class="notification-banner__button notification-banner__button--primary"
+				onclick="enableNotifications()"
+			>
+				Get Notifications
+			</button>
+		</div>
+	</div>
+</div>
+
+<script>
+	// Show notification banner after a delay
+	function showNotificationBanner() {
+		const banner = document.getElementById('notification-banner');
+		const dismissed = localStorage.getItem('notification-dismissed');
+		const notificationsEnabled = localStorage.getItem('notifications-enabled');
+		
+		// Only show if not dismissed and notifications not already enabled
+		if (!dismissed && !notificationsEnabled && banner) {
+			setTimeout(() => {
+				banner.style.display = 'block';
+				banner.classList.add('notification-banner--visible');
+			}, 3000); // Show after 3 seconds
+		}
+	}
+
+	// Dismiss notification
+	function dismissNotification() {
+		const banner = document.getElementById('notification-banner');
+		if (banner) {
+			banner.classList.remove('notification-banner--visible');
+			setTimeout(() => {
+				banner.style.display = 'none';
+			}, 300);
+			localStorage.setItem('notification-dismissed', 'true');
+		}
+	}
+
+	// Enable notifications
+	function enableNotifications() {
+		if ('Notification' in window) {
+			Notification.requestPermission().then(permission => {
+				if (permission === 'granted') {
+					localStorage.setItem('notifications-enabled', 'true');
+					dismissNotification();
+					
+					// Show confirmation notification
+					new Notification('idag.ai', {
+						body: 'Du kommer nu att få notifikationer om nya artiklar!',
+						icon: '/favicon.svg'
+					});
+				} else {
+					alert('Notifikationer blockerades. Du kan aktivera dem i webbläsarinställningarna.');
+				}
+			});
+		} else {
+			alert('Din webbläsare stöder inte notifikationer.');
+		}
+	}
+
+	// Make functions global
+	(window as any).dismissNotification = dismissNotification;
+	(window as any).enableNotifications = enableNotifications;
+
+	// Initialize when DOM is loaded
+	document.addEventListener('DOMContentLoaded', showNotificationBanner);
+</script>
+
+<style>
+	.notification-banner {
+		position: fixed;
+		bottom: 20px;
+		left: 50%;
+		transform: translateX(-50%) translateY(100px);
+		z-index: 1000;
+		max-width: 600px;
+		width: calc(100% - 40px);
+		opacity: 0;
+		transition: all 0.3s ease;
+		pointer-events: none;
+	}
+
+	.notification-banner--visible {
+		transform: translateX(-50%) translateY(0);
+		opacity: 1;
+		pointer-events: auto;
+	}
+
+	.notification-banner__content {
+		background: rgba(242, 242, 247, 0.95);
+		backdrop-filter: blur(20px);
+		border-radius: 16px;
+		padding: 16px 20px;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 16px;
+		box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+		border: 1px solid rgba(255, 255, 255, 0.2);
+	}
+
+	.notification-banner__text {
+		margin: 0;
+		font-size: 15px;
+		line-height: 1.4;
+		color: #1d1d1f;
+		font-weight: 400;
+		flex: 1;
+	}
+
+	.notification-banner__actions {
+		display: flex;
+		gap: 12px;
+		flex-shrink: 0;
+	}
+
+	.notification-banner__button {
+		padding: 8px 16px;
+		border-radius: 20px;
+		font-size: 14px;
+		font-weight: 500;
+		cursor: pointer;
+		transition: all 0.2s ease;
+		border: none;
+		white-space: nowrap;
+	}
+
+	.notification-banner__button--dismiss {
+		background: rgba(255, 255, 255, 0.8);
+		color: #1d1d1f;
+		border: 1px solid rgba(0, 0, 0, 0.1);
+	}
+
+	.notification-banner__button--dismiss:hover {
+		background: rgba(255, 255, 255, 0.9);
+		transform: translateY(-1px);
+	}
+
+	.notification-banner__button--primary {
+		background: #007aff;
+		color: white;
+		box-shadow: 0 2px 8px rgba(0, 122, 255, 0.3);
+	}
+
+	.notification-banner__button--primary:hover {
+		background: #0056cc;
+		transform: translateY(-1px);
+		box-shadow: 0 4px 12px rgba(0, 122, 255, 0.4);
+	}
+
+	/* Dark mode support */
+	@media (prefers-color-scheme: dark) {
+		.notification-banner__content {
+			background: rgba(28, 28, 30, 0.95);
+			border: 1px solid rgba(255, 255, 255, 0.1);
+		}
+
+		.notification-banner__text {
+			color: #f2f2f7;
+		}
+
+		.notification-banner__button--dismiss {
+			background: rgba(58, 58, 60, 0.8);
+			color: #f2f2f7;
+			border: 1px solid rgba(255, 255, 255, 0.1);
+		}
+
+		.notification-banner__button--dismiss:hover {
+			background: rgba(58, 58, 60, 0.9);
+		}
+	}
+
+	/* Mobile responsive */
+	@media (max-width: 480px) {
+		.notification-banner {
+			bottom: 10px;
+			width: calc(100% - 20px);
+		}
+
+		.notification-banner__content {
+			flex-direction: column;
+			align-items: stretch;
+			gap: 12px;
+			padding: 16px;
+		}
+
+		.notification-banner__text {
+			text-align: center;
+		}
+
+		.notification-banner__actions {
+			justify-content: center;
+		}
+
+		.notification-banner__button {
+			flex: 1;
+			max-width: 140px;
+		}
+	}
+</style>

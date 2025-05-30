@@ -2,49 +2,451 @@
 import BaseHead from '../components/BaseHead.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
+import HeroArticle from '../components/news/HeroArticle.astro';
+import NewsGrid from '../components/news/NewsGrid.astro';
+import NotificationBanner from '../components/NotificationBanner.astro';
 import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
+import { getCollection } from 'astro:content';
+
+// Get all news articles and sort by date
+const allNews = await getCollection('news');
+const sortedNews = allNews.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+
+// Get featured article with smart logic:
+// 1. If there's a featured article from today, use it
+// 2. Otherwise, use the most recent article (auto-feature latest)
+const today = new Date();
+const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+
+const todaysFeatured = sortedNews.find(article =>
+  article.data.featured &&
+  article.data.pubDate >= todayStart
+);
+
+const featuredArticle = todaysFeatured || sortedNews[0];
+
+// Get latest articles for grid (excluding featured)
+const latestArticles = sortedNews
+  .filter(article => article.id !== featuredArticle?.id)
+  .slice(0, 6)
+  .map(article => ({
+    title: article.data.title,
+    description: article.data.description,
+    heroImage: article.data.heroImage,
+    heroImageAlt: article.data.heroImageAlt,
+    category: article.data.category,
+    pubDate: article.data.pubDate,
+    slug: article.id,
+    readingTime: article.data.readingTime,
+    hashtags: article.data.hashtags || [],
+  }));
+
+// Prepare featured article data
+const heroArticleData = featuredArticle ? {
+  title: featuredArticle.data.title,
+  description: featuredArticle.data.description,
+  heroImage: featuredArticle.data.heroImage,
+  heroImageAlt: featuredArticle.data.heroImageAlt,
+  category: featuredArticle.data.category,
+  pubDate: featuredArticle.data.pubDate,
+  slug: featuredArticle.id,
+  readingTime: featuredArticle.data.readingTime,
+  author: featuredArticle.data.author,
+  hashtags: featuredArticle.data.hashtags || [],
+} : null;
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang="sv">
 	<head>
 		<BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
+		<link rel="stylesheet" href="/src/styles/apple-newsroom.css" />
 	</head>
 	<body>
 		<Header />
-		<main>
-			<h1>🧑‍🚀 Hello, Astronaut!</h1>
-			<p>
-				Welcome to the official <a href="https://astro.build/">Astro</a> blog starter template. This
-				template serves as a lightweight, minimally-styled starting point for anyone looking to build
-				a personal website, blog, or portfolio with Astro.
-			</p>
-			<p>
-				This template comes with a few integrations already configured in your
-				<code>astro.config.mjs</code> file. You can customize your setup with
-				<a href="https://astro.build/integrations">Astro Integrations</a> to add tools like Tailwind,
-				React, or Vue to your project.
-			</p>
-			<p>Here are a few ideas on how to get started with the template:</p>
-			<ul>
-				<li>Edit this page in <code>src/pages/index.astro</code></li>
-				<li>Edit the site header items in <code>src/components/Header.astro</code></li>
-				<li>Add your name to the footer in <code>src/components/Footer.astro</code></li>
-				<li>Check out the included blog posts in <code>src/content/blog/</code></li>
-				<li>Customize the blog post page layout in <code>src/layouts/BlogPost.astro</code></li>
-			</ul>
-			<p>
-				Have fun! If you get stuck, remember to <a href="https://docs.astro.build/"
-					>read the docs
-				</a> or <a href="https://astro.build/chat">join us on Discord</a> to ask questions.
-			</p>
-			<p>
-				Looking for a blog template with a bit more personality? Check out <a
-					href="https://github.com/Charca/astro-blog-template"
-					>astro-blog-template
-				</a> by <a href="https://twitter.com/Charca">Maxi Ferreira</a>.
-			</p>
+		
+		<main class="main-content">
+			<!-- Hero Section -->
+			{heroArticleData && (
+				<section class="hero-section section--hero section--full-width scroll-animate">
+					<div class="container">
+						<div class="hero-intro scroll-animate">
+							<h1 class="hero-intro__title typography-hero">Senaste nytt</h1>
+							<p class="hero-intro__subtitle typography-body">
+								Håll dig uppdaterad med de senaste nyheterna inom artificiell intelligens
+							</p>
+						</div>
+						<HeroArticle article={heroArticleData} />
+					</div>
+				</section>
+			)}
+
+			<!-- Latest News Grid -->
+			{latestArticles.length > 0 && (
+				<section class="news-section section section--full-width scroll-animate">
+					<div id="news-grid-container">
+						<NewsGrid
+							articles={latestArticles}
+							title="Senaste artiklarna"
+							columns="two"
+						/>
+					</div>
+				</section>
+			)}
+
+			<!-- Categories Preview -->
+			<section class="categories-section section section--full-width scroll-animate">
+				<div class="container">
+					<h2 class="categories-section__title typography-headline text-center scroll-animate">
+						Utforska våra kategorier
+					</h2>
+					<div class="categories-grid">
+						<a href="/kategori/ai-nyheter" class="category-card">
+							<div class="category-card__icon">
+								<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+									<path d="M9 12l2 2 4-4"/>
+									<circle cx="12" cy="12" r="10"/>
+								</svg>
+							</div>
+							<h3 class="category-card__title typography-title">AI NYHETER</h3>
+							<p class="category-card__description typography-body">
+								De senaste nyheterna och utvecklingarna inom AI
+							</p>
+						</a>
+
+						<a href="/kategori/teknik" class="category-card">
+							<div class="category-card__icon">
+								<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+									<rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+									<line x1="8" y1="21" x2="16" y2="21"/>
+									<line x1="12" y1="17" x2="12" y2="21"/>
+								</svg>
+							</div>
+							<h3 class="category-card__title typography-title">TEKNIK</h3>
+							<p class="category-card__description typography-body">
+								Tekniska genomgångar och djupdykningar
+							</p>
+						</a>
+
+						<a href="/kategori/analys" class="category-card">
+							<div class="category-card__icon">
+								<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+									<line x1="18" y1="20" x2="18" y2="10"/>
+									<line x1="12" y1="20" x2="12" y2="4"/>
+									<line x1="6" y1="20" x2="6" y2="14"/>
+								</svg>
+							</div>
+							<h3 class="category-card__title typography-title">ANALYS</h3>
+							<p class="category-card__description typography-body">
+								Expertanalyser och branschinsikter
+							</p>
+						</a>
+
+						<a href="/kategori/trender" class="category-card">
+							<div class="category-card__icon">
+								<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+									<polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/>
+								</svg>
+							</div>
+							<h3 class="category-card__title typography-title">TRENDER</h3>
+							<p class="category-card__description typography-body">
+								Framtidstrender och prognoser inom AI
+							</p>
+						</a>
+
+						<a href="/kategori/foretag" class="category-card">
+							<div class="category-card__icon">
+								<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+									<path d="M3 21h18"/>
+									<path d="M5 21V7l8-4v18"/>
+									<path d="M19 21V11l-6-4"/>
+								</svg>
+							</div>
+							<h3 class="category-card__title typography-title">FÖRETAG</h3>
+							<p class="category-card__description typography-body">
+								Företagsnyheter och investeringar
+							</p>
+						</a>
+					</div>
+				</div>
+			</section>
+
 		</main>
+		
 		<Footer />
+		
+		<!-- Apple-style Notification Banner -->
+		<NotificationBanner />
+
+		<!-- Enhanced Scripts with Animations -->
+		<script>
+			import { initScrollAnimations, initProgressiveImages } from '../utils.js';
+			
+			document.addEventListener('DOMContentLoaded', () => {
+				// Initialize scroll animations and progressive loading
+				initScrollAnimations();
+				initProgressiveImages();
+			});
+		</script>
+		
+		<!-- Filtering Script -->
+		<script define:vars={{ latestArticles, heroArticleData }}>
+			document.addEventListener('DOMContentLoaded', () => {
+				const allArticles = [...latestArticles];
+				if (heroArticleData) {
+					allArticles.unshift(heroArticleData);
+				}
+
+				// Listen for filter events from header
+				window.addEventListener('filter', (event) => {
+					const filter = event.detail.filter;
+					filterArticles(filter);
+				});
+
+				// Listen for search events from header
+				window.addEventListener('search', (event) => {
+					const query = event.detail.query;
+					searchArticles(query);
+				});
+
+				function filterArticles(filter) {
+					const newsGrid = document.getElementById('news-grid-container');
+					const heroSection = document.querySelector('.hero-section');
+					
+					if (filter === 'senaste') {
+						// Show all articles
+						showAllArticles();
+					} else {
+						// Filter articles by hashtag
+						const filteredArticles = allArticles.filter(article =>
+							article.hashtags && article.hashtags.includes(filter)
+						);
+						updateNewsDisplay(filteredArticles, `Artiklar: ${filter}`);
+					}
+				}
+
+				function searchArticles(query) {
+					const filteredArticles = allArticles.filter(article =>
+						article.title.toLowerCase().includes(query.toLowerCase()) ||
+						article.description.toLowerCase().includes(query.toLowerCase())
+					);
+					updateNewsDisplay(filteredArticles, `Sökresultat för: "${query}"`);
+				}
+
+				function showAllArticles() {
+					const heroSection = document.querySelector('.hero-section');
+					const newsGrid = document.getElementById('news-grid-container');
+					
+					if (heroSection) heroSection.style.display = 'block';
+					if (newsGrid) {
+						newsGrid.innerHTML = `
+							<section class="section">
+								<div class="container">
+									<h2 class="section-title typography-headline text-center">Senaste artiklarna</h2>
+									<div class="news-grid news-grid--two-columns">
+										${latestArticles.map(article => createArticleCard(article)).join('')}
+									</div>
+								</div>
+							</section>
+						`;
+					}
+				}
+
+				function updateNewsDisplay(articles, title) {
+					const heroSection = document.querySelector('.hero-section');
+					const newsGrid = document.getElementById('news-grid-container');
+					
+					// Hide hero section when filtering
+					if (heroSection) heroSection.style.display = 'none';
+					
+					if (newsGrid) {
+						newsGrid.innerHTML = `
+							<section class="section">
+								<div class="container">
+									<h2 class="section-title typography-headline text-center">${title}</h2>
+									<div class="news-grid news-grid--two-columns">
+										${articles.map(article => createArticleCard(article)).join('')}
+									</div>
+								</div>
+							</section>
+						`;
+					}
+				}
+
+				function createArticleCard(article) {
+					return `
+						<article class="news-card">
+							<a href="/artikel/${article.slug}" class="news-card__link">
+								<div class="news-card__image">
+									<img src="${article.heroImage}" alt="${article.heroImageAlt}" loading="lazy" />
+								</div>
+								<div class="news-card__content">
+									<div class="news-card__meta">
+										<span class="category-badge category-badge--${article.category}">${article.category.toUpperCase()}</span>
+										<time class="news-card__date">${new Date(article.pubDate).toLocaleDateString('sv-SE')}</time>
+									</div>
+									<h3 class="news-card__title typography-title">${article.title}</h3>
+									<p class="news-card__description typography-body">${article.description}</p>
+									<div class="news-card__footer">
+										<span class="news-card__reading-time">${article.readingTime} min läsning</span>
+									</div>
+								</div>
+							</a>
+						</article>
+					`;
+				}
+			});
+		</script>
 	</body>
 </html>
+
+<style>
+	/* Main Content Container */
+	.main-content {
+		width: 100%;
+		min-height: 100vh;
+		display: flex;
+		flex-direction: column;
+	}
+
+	/* Hero Section */
+	.hero-section {
+		background-color: var(--bg-primary);
+		width: 100%;
+		position: relative;
+	}
+
+	.hero-intro {
+		text-align: center;
+		margin-bottom: var(--spacing-2xl, 4rem);
+	}
+
+	.hero-intro__title {
+		margin: 0 0 var(--spacing-md, 1.5rem) 0;
+		color: var(--text-primary);
+	}
+
+	.hero-intro__subtitle {
+		margin: 0;
+		color: var(--text-secondary);
+		font-size: 1.125rem;
+		max-width: 600px;
+		margin-left: auto;
+		margin-right: auto;
+	}
+
+	/* News Section */
+	.news-section {
+		background-color: var(--bg-primary);
+		width: 100%;
+		position: relative;
+	}
+
+	/* Categories Section */
+	.categories-section {
+		background-color: var(--bg-primary);
+		width: 100%;
+		position: relative;
+	}
+
+	.categories-section__title {
+		margin: 0 0 var(--spacing-2xl, 4rem) 0;
+		color: var(--text-primary);
+	}
+
+	.categories-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+		gap: var(--spacing-lg, 2rem);
+	}
+
+	.category-card {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		text-align: center;
+		padding: var(--spacing-xl, 3rem) var(--spacing-lg, 2rem);
+		background: var(--tile-background);
+		border-radius: var(--border-radius, 12px);
+		border: 1px solid var(--color-border);
+		text-decoration: none;
+		color: inherit;
+		transition: all var(--transition-normal, 0.3s ease);
+		box-shadow: var(--shadow-sm, 0 1px 3px rgba(0, 0, 0, 0.1));
+	}
+
+	.category-card:hover {
+		transform: translateY(-4px);
+		box-shadow: var(--shadow-hover, 0 8px 25px rgba(0, 0, 0, 0.15));
+	}
+
+	.category-card__icon {
+		margin-bottom: var(--spacing-md, 1.5rem);
+		color: var(--color-accent);
+	}
+
+	.category-card__title {
+		margin: 0 0 var(--spacing-sm, 1rem) 0;
+		color: var(--text-primary);
+	}
+
+	.category-card__description {
+		margin: 0;
+		color: var(--text-secondary);
+	}
+
+
+	/* Enhanced Mobile Responsive */
+	@media (max-width: 480px) {
+		.hero-intro {
+			margin-bottom: var(--spacing-lg, 2rem);
+			padding: 0 var(--spacing-xs, 0.5rem);
+		}
+
+		.hero-intro__subtitle {
+			font-size: 1rem;
+			padding: 0 var(--spacing-sm, 1rem);
+		}
+
+		.categories-grid {
+			grid-template-columns: 1fr;
+			gap: var(--spacing-sm, 1rem);
+		}
+
+		.category-card {
+			padding: var(--spacing-lg, 2rem) var(--spacing-sm, 1rem);
+			margin: 0 var(--spacing-xs, 0.5rem);
+		}
+
+
+		.categories-section__title {
+			margin-bottom: var(--spacing-lg, 2rem);
+			padding: 0 var(--spacing-sm, 1rem);
+		}
+	}
+
+	@media (min-width: 481px) and (max-width: 768px) {
+		.categories-grid {
+			grid-template-columns: repeat(2, 1fr);
+			gap: var(--spacing-md, 1.5rem);
+		}
+
+	}
+
+	@media (min-width: 769px) and (max-width: 1024px) {
+		.categories-grid {
+			grid-template-columns: repeat(3, 1fr);
+		}
+	}
+
+	@media (min-width: 1025px) {
+		.categories-grid {
+			grid-template-columns: repeat(5, 1fr);
+			gap: var(--spacing-xl, 3rem);
+		}
+
+		.category-card {
+			padding: var(--spacing-2xl, 4rem) var(--spacing-lg, 2rem);
+		}
+	}
+</style>

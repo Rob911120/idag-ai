@@ -1,0 +1,94 @@
+---
+import NewsCard from './NewsCard.astro';
+import type { CategoryKey } from '../../consts';
+
+export interface Props {
+  articles: Array<{
+    title: string;
+    description: string;
+    heroImage: string;
+    heroImageAlt: string;
+    category: CategoryKey;
+    pubDate: Date;
+    slug: string;
+    readingTime?: number;
+  }>;
+  columns?: 'two' | 'three';
+  title?: string;
+  showTitle?: boolean;
+}
+
+const { articles, columns = 'two', title = 'Senaste nytt', showTitle = true } = Astro.props;
+---
+
+<section class="news-grid-section">
+  {showTitle && (
+    <div class="container">
+      <h2 class="news-grid__title typography-headline">{title}</h2>
+    </div>
+  )}
+  
+  <div class="container">
+    <div class={`news-grid ${columns === 'three' ? 'news-grid--three-columns' : ''}`}>
+      {articles.map((article) => (
+        <NewsCard article={article} />
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  .news-grid-section {
+    padding: var(--spacing-xl, 3rem) 0;
+  }
+
+  .news-grid__title {
+    margin: 0 0 var(--spacing-xl, 3rem) 0;
+    text-align: center;
+    color: var(--color-primary, #000);
+  }
+
+  .news-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: var(--grid-gap, 2rem);
+  }
+
+  /* Two column layout for tablets and up */
+  @media (min-width: 768px) {
+    .news-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  /* Three column layout for large screens */
+  @media (min-width: 1200px) {
+    .news-grid--three-columns {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  /* Mobile adjustments */
+  @media (max-width: 767px) {
+    .news-grid-section {
+      padding: var(--spacing-lg, 2rem) 0;
+    }
+    
+    .news-grid {
+      grid-template-columns: 1fr;
+      gap: var(--spacing-md, 1.5rem);
+    }
+    
+    .news-grid__title {
+      margin-bottom: var(--spacing-lg, 2rem);
+      font-size: var(--font-size-h2, 2rem);
+    }
+  }
+
+  /* Very small screens */
+  @media (max-width: 480px) {
+    .news-grid {
+      gap: var(--spacing-sm, 1rem);
+    }
+  }
+</style>

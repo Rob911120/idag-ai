@@ -1,0 +1,48 @@
+name: Auto Deploy on New Articles
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'src/content/news/**/*.md'
+      - 'src/content/news/**/*.mdx'
+      - 'uploaded/**/*.md'
+      - 'uploaded/**/*.mdx'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Process uploaded files
+      run: node scripts/process-uploaded.js
+      
+    - name: Update featured articles
+      run: node scripts/update-featured.js
+      
+    - name: Commit updated featured status
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add -A
+        git diff --staged --quiet || git commit -m "🤖 Auto-update featured articles"
+        git push
+      
+    - name: Build and Deploy to Cloudflare Workers
+      run: npm run deploy
+      env:
+        CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

@@ -32,7 +32,10 @@
     "check": "astro build && tsc && wrangler deploy --dry-run",
     "deploy": "wrangler deploy",
     "dev": "astro dev",
-    "preview": "astro build && wrangler dev"
+    "preview": "astro build && wrangler dev",
+    "process-uploaded": "node scripts/process-uploaded.js",
+    "update-featured": "node scripts/update-featured.js",
+    "publish": "npm run process-uploaded && npm run update-featured && npm run build && npm run deploy"
   },
   "type": "module"
 }

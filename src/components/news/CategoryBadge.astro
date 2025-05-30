@@ -1,0 +1,17 @@
+---
+import { CATEGORIES, type CategoryKey } from '../../consts';
+
+export interface Props {
+  category: CategoryKey;
+  size?: 'small' | 'normal';
+  href?: string;
+}
+
+const { category, size = 'normal', href } = Astro.props;
+const displayName = CATEGORIES[category];
+const categoryHref = href || `/kategori/${category}`;
+---
+
+<a href={categoryHref} class={`category-badge category-badge--${category} ${size === 'small' ? 'category-badge--small' : ''}`}>
+  {displayName}
+</a>
