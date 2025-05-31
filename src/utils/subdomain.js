@@ -82,13 +82,14 @@ export function detectSubdomain(request, astroUrl) {
     }
   }
   
-  console.log('  No valid geo subdomain detected');
-  return null;
+  console.log('  No valid geo subdomain detected, using default "se"');
+  // During prerendering, return a default value instead of null to prevent build errors
+  return 'se';
   
   } catch (error) {
     console.error('🚨 Error in geo subdomain detection:', error);
-    // Fallback to default behavior
-    return null;
+    // Fallback to default behavior - use 'se' instead of null during prerendering
+    return 'se';
   }
 }
 

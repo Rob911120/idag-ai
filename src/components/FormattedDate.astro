@@ -5,12 +5,20 @@ interface Props {
 
 const { date } = Astro.props;
 
-// Handle null/undefined dates
+// Handle null/undefined dates gracefully during prerendering
 if (!date) {
-	throw new Error('FormattedDate component requires a valid date prop');
+	console.warn('FormattedDate component received null/undefined date prop');
+	// Return empty component during prerendering instead of throwing
+	return;
 }
 
 const validDate = date instanceof Date ? date : new Date(date);
+
+// Additional validation for invalid dates
+if (isNaN(validDate.getTime())) {
+	console.warn('FormattedDate component received invalid date:', date);
+	return;
+}
 ---
 
 <time datetime={validDate.toISOString()}>

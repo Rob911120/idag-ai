@@ -121,7 +121,7 @@ const languageName = languageNames[language] || 'Swedish';
 <meta name="author" content={author || tGeo('ui.author', geoSubdomain) || 'idag.ai Redaktion'} />
 
 <!-- Geo-specific metadata -->
-{geoSubdomain && typeof geoSubdomain === 'string' && (
+{geoSubdomain && typeof geoSubdomain === 'string' && geoSubdomain.trim() !== '' && (
 	<>
 		<meta name="geo.region" content={geoSubdomain.toUpperCase()} />
 		<meta name="geo.placename" content={geoSubdomain === 'se' ? 'Sweden' : 'Norway'} />
