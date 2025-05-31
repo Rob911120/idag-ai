@@ -4,8 +4,10 @@ on:
   push:
     branches: [ main ]
     paths:
-      - 'src/content/news/**/*.md'
-      - 'src/content/news/**/*.mdx'
+      - 'src/content/se/**/*.md'
+      - 'src/content/se/**/*.mdx'
+      - 'src/content/no/**/*.md'
+      - 'src/content/no/**/*.mdx'
       - 'uploaded/**/*.md'
       - 'uploaded/**/*.mdx'
   workflow_dispatch:
