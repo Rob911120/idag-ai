@@ -50,34 +50,6 @@ const heroArticleData = featuredArticle ? {
 } : null;
 
 
-// News categories for quick navigation
-const newsCategories = [
-  {
-    name: 'Breaking News',
-    description: 'Senaste nyheterna inom AI-världen',
-    icon: 'breaking',
-    filter: 'breaking'
-  },
-  {
-    name: 'Företagsnyheter',
-    description: 'AI-investeringar och företagsuppdateringar',
-    icon: 'business',
-    filter: 'business'
-  },
-  {
-    name: 'Produktlansering',
-    description: 'Nya AI-produkter och tjänster',
-    icon: 'product',
-    filter: 'product'
-  },
-  {
-    name: 'Forskning',
-    description: 'Vetenskapliga genombrott och studier',
-    icon: 'research',
-    filter: 'research'
-  }
-];
-
 // SEO data
 const pageTitle = "Nyheter - AI-nyheter och senaste utvecklingen | idag.ai";
 const pageDescription = "Håll dig uppdaterad med de senaste nyheterna inom artificiell intelligens. Breaking news, analyser och expertkommentarer om AI-utvecklingen.";
@@ -116,56 +88,6 @@ const pageDescription = "Håll dig uppdaterad med de senaste nyheterna inom arti
 					{heroArticleData && (
 						<HeroArticle article={heroArticleData} />
 					)}
-				</div>
-			</section>
-
-			<!-- News Categories -->
-			<section class="categories-section section scroll-animate">
-				<div class="container">
-					<h2 class="categories-section__title typography-headline text-center">
-						Utforska nyhetskategorier
-					</h2>
-					<div class="news-categories-grid">
-						{newsCategories.map(category => (
-							<div class="news-category-card">
-								<div class="news-category-card__icon">
-									{category.icon === 'breaking' && (
-										<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-											<path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/>
-											<path d="M3 6h18"/>
-											<path d="M16 10a4 4 0 0 1-8 0"/>
-										</svg>
-									)}
-									{category.icon === 'business' && (
-										<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-											<path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
-											<rect width="20" height="14" x="2" y="6" rx="2"/>
-										</svg>
-									)}
-									{category.icon === 'product' && (
-										<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-											<path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/>
-											<path d="m3.3 7 8.7 5 8.7-5"/>
-											<path d="M12 22V12"/>
-										</svg>
-									)}
-									{category.icon === 'research' && (
-										<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-											<path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-1.36c0-1.1.9-2 2-2h1.5V4.5A2.5 2.5 0 0 1 9.5 2Z"/>
-											<path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-1.36c0-1.1-.9-2-2-2h-1.5V4.5A2.5 2.5 0 0 0 14.5 2Z"/>
-										</svg>
-									)}
-								</div>
-								<h3 class="news-category-card__title typography-title">{category.name}</h3>
-								<p class="news-category-card__description typography-body">
-									{category.description}
-								</p>
-								<a href={`/nyheter?filter=${category.filter}`} class="news-category-card__link">
-									Utforska →
-								</a>
-							</div>
-						))}
-					</div>
 				</div>
 			</section>
 
@@ -286,65 +208,6 @@ const pageDescription = "Håll dig uppdaterad med de senaste nyheterna inom arti
 		margin-right: auto;
 	}
 
-	/* News Categories Section */
-	.categories-section {
-		background-color: var(--bg-secondary);
-		width: 100%;
-	}
-
-	.categories-section__title {
-		margin: 0 0 var(--spacing-2xl, 4rem) 0;
-		color: var(--text-primary);
-	}
-
-	.news-categories-grid {
-		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-		gap: var(--spacing-lg, 2rem);
-	}
-
-	.news-category-card {
-		background: var(--tile-background);
-		border-radius: var(--border-radius, 12px);
-		padding: var(--spacing-xl, 3rem) var(--spacing-lg, 2rem);
-		text-align: center;
-		border: 1px solid var(--color-border);
-		transition: all var(--transition-normal);
-		box-shadow: var(--shadow-sm);
-		position: relative;
-	}
-
-	.news-category-card:hover {
-		transform: translateY(-4px);
-		box-shadow: var(--shadow-hover);
-	}
-
-	.news-category-card__icon {
-		margin-bottom: var(--spacing-md, 1.5rem);
-		color: var(--color-accent);
-	}
-
-	.news-category-card__title {
-		margin: 0 0 var(--spacing-sm, 1rem) 0;
-		color: var(--text-primary);
-	}
-
-	.news-category-card__description {
-		margin: 0 0 var(--spacing-md, 1.5rem) 0;
-		color: var(--text-secondary);
-	}
-
-	.news-category-card__link {
-		color: var(--color-accent);
-		text-decoration: none;
-		font-weight: 600;
-		transition: color var(--transition-normal);
-	}
-
-	.news-category-card__link:hover {
-		color: var(--color-accent-hover);
-	}
-
 
 	/* News Section */
 	.news-section {
@@ -435,16 +298,6 @@ const pageDescription = "Håll dig uppdaterad med de senaste nyheterna inom arti
 			padding: 0 var(--spacing-sm, 1rem);
 		}
 
-		.news-categories-grid {
-			grid-template-columns: 1fr;
-			gap: var(--spacing-md, 1.5rem);
-		}
-
-		.news-category-card {
-			padding: var(--spacing-lg, 2rem) var(--spacing-md, 1.5rem);
-			margin: 0 var(--spacing-xs, 0.5rem);
-		}
-
 		.news-showcase {
 			grid-template-columns: 1fr;
 			gap: var(--spacing-md, 1.5rem);
@@ -458,10 +311,6 @@ const pageDescription = "Håll dig uppdaterad med de senaste nyheterna inom arti
 	}
 
 	@media (min-width: 769px) and (max-width: 1024px) {
-		.news-categories-grid {
-			grid-template-columns: repeat(2, 1fr);
-		}
-
 		.news-showcase {
 			grid-template-columns: repeat(2, 1fr);
 		}

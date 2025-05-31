@@ -210,15 +210,6 @@ const htmlLang = getHtmlLang(currentGeo);
 			{heroArticleData && (
 				<section class="hero-section section--hero section--full-width scroll-animate">
 					<div class="container">
-						<div class="hero-intro scroll-animate">
-							<h1 class="hero-intro__title typography-hero">{tGeo('nav.news', currentGeo)}</h1>
-							<p class="hero-intro__subtitle typography-body">
-								{currentGeo === 'no'
-									? 'Hold deg oppdatert med de siste nyhetene innen kunstig intelligens'
-									: 'Håll dig uppdaterad med de senaste nyheterna inom artificiell intelligens'
-								}
-							</p>
-						</div>
 						<HeroArticle article={heroArticleData} />
 					</div>
 				</section>
@@ -305,70 +296,6 @@ const htmlLang = getHtmlLang(currentGeo);
 					</div>
 				</section>
 			)}
-
-			<!-- Categories Preview -->
-			<section class="categories-section section section--full-width scroll-animate">
-				<div class="container">
-					<h2 class="categories-section__title typography-headline text-center scroll-animate">
-						{currentGeo === 'no' ? 'Utforsk våre kategorier' : 'Utforska våra kategorier'}
-					</h2>
-					<div class="categories-grid">
-						{Object.entries(HASHTAG_CATEGORIES).map(([key, category]) => (
-							<a href={`/?filter=${key}`} class="category-card">
-								<div class="category-card__icon">
-									{key === 'modeller' && (
-										<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-											<path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-1.36c0-1.1.9-2 2-2h1.5V4.5A2.5 2.5 0 0 1 9.5 2Z"/>
-											<path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-1.36c0-1.1-.9-2-2-2h-1.5V4.5A2.5 2.5 0 0 0 14.5 2Z"/>
-										</svg>
-									)}
-									{key === 'verktyg' && (
-										<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-											<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
-										</svg>
-									)}
-									{key === 'guider' && (
-										<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-											<path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/>
-										</svg>
-									)}
-									{key === 'nyheter' && (
-										<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-											<path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/>
-											<path d="M18 14h-8"/>
-											<path d="M15 18h-5"/>
-											<path d="M10 6h8v4h-8V6Z"/>
-										</svg>
-									)}
-									{key === 'analys' && (
-										<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-											<line x1="18" y1="20" x2="18" y2="10"/>
-											<line x1="12" y1="20" x2="12" y2="4"/>
-											<line x1="6" y1="20" x2="6" y2="14"/>
-										</svg>
-									)}
-									{key === 'trender' && (
-										<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-											<polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/>
-										</svg>
-									)}
-									{key === 'företag' && (
-										<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-											<path d="M3 21h18"/>
-											<path d="M5 21V7l8-4v18"/>
-											<path d="M19 21V11l-6-4"/>
-										</svg>
-									)}
-								</div>
-								<h3 class="category-card__title typography-title">{category.name}</h3>
-								<p class="category-card__description typography-body">
-									{category.description}
-								</p>
-							</a>
-						))}
-					</div>
-				</div>
-			</section>
 
 		</main>
 		
@@ -536,83 +463,12 @@ const htmlLang = getHtmlLang(currentGeo);
 		position: relative;
 	}
 
-	.hero-intro {
-		text-align: center;
-		margin-bottom: var(--spacing-2xl, 4rem);
-	}
-
-	.hero-intro__title {
-		margin: 0 0 var(--spacing-md, 1.5rem) 0;
-		color: var(--text-primary);
-	}
-
-	.hero-intro__subtitle {
-		margin: 0;
-		color: var(--text-secondary);
-		font-size: 1.125rem;
-		max-width: 600px;
-		margin-left: auto;
-		margin-right: auto;
-	}
 
 	/* News Section */
 	.news-section {
 		background-color: var(--bg-primary);
 		width: 100%;
 		position: relative;
-	}
-
-	/* Categories Section */
-	.categories-section {
-		background-color: var(--bg-primary);
-		width: 100%;
-		position: relative;
-	}
-
-	.categories-section__title {
-		margin: 0 0 var(--spacing-2xl, 4rem) 0;
-		color: var(--text-primary);
-	}
-
-	.categories-grid {
-		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-		gap: var(--spacing-lg, 2rem);
-	}
-
-	.category-card {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		text-align: center;
-		padding: var(--spacing-xl, 3rem) var(--spacing-lg, 2rem);
-		background: var(--tile-background);
-		border-radius: var(--border-radius, 12px);
-		border: 1px solid var(--color-border);
-		text-decoration: none;
-		color: inherit;
-		transition: all var(--transition-normal, 0.3s ease);
-		box-shadow: var(--shadow-sm, 0 1px 3px rgba(0, 0, 0, 0.1));
-	}
-
-	.category-card:hover {
-		transform: translateY(-4px);
-		box-shadow: var(--shadow-hover, 0 8px 25px rgba(0, 0, 0, 0.15));
-	}
-
-	.category-card__icon {
-		margin-bottom: var(--spacing-md, 1.5rem);
-		color: var(--color-accent);
-	}
-
-	.category-card__title {
-		margin: 0 0 var(--spacing-sm, 1rem) 0;
-		color: var(--text-primary);
-	}
-
-	.category-card__description {
-		margin: 0;
-		color: var(--text-secondary);
 	}
 
 	/* Subdomains Section */
@@ -801,46 +657,10 @@ const htmlLang = getHtmlLang(currentGeo);
 			gap: var(--spacing-xs, 0.5rem);
 		}
 
-		.categories-grid {
-			grid-template-columns: 1fr;
-			gap: var(--spacing-sm, 1rem);
-		}
-
-		.category-card {
-			padding: var(--spacing-lg, 2rem) var(--spacing-sm, 1rem);
-			margin: 0 var(--spacing-xs, 0.5rem);
-		}
-
-		.categories-section__title,
 		.subdomains-section__title,
 		.hashtags-section__title {
 			margin-bottom: var(--spacing-lg, 2rem);
 			padding: 0 var(--spacing-sm, 1rem);
-		}
-	}
-
-	@media (min-width: 481px) and (max-width: 768px) {
-		.categories-grid {
-			grid-template-columns: repeat(2, 1fr);
-			gap: var(--spacing-md, 1.5rem);
-		}
-
-	}
-
-	@media (min-width: 769px) and (max-width: 1024px) {
-		.categories-grid {
-			grid-template-columns: repeat(3, 1fr);
-		}
-	}
-
-	@media (min-width: 1025px) {
-		.categories-grid {
-			grid-template-columns: repeat(5, 1fr);
-			gap: var(--spacing-xl, 3rem);
-		}
-
-		.category-card {
-			padding: var(--spacing-2xl, 4rem) var(--spacing-lg, 2rem);
 		}
 	}
 
