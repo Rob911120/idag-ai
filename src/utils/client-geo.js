@@ -3,40 +3,37 @@ export function initClientGeoSwitching() {
   // Check if we're in browser environment
   if (typeof window === 'undefined') return;
   
-  console.log('🌍 Initializing client-side geo switching');
+  console.log('🌍 FIXED: Initializing domain-based geo switching');
   console.log('🔍 Current URL:', window.location.href);
   console.log('🔍 Current hostname:', window.location.hostname);
   
-  // First check for server-side detected geo from body data attribute
+  // FIXED: Only use server-side detected geo from domain, never add geo parameters
   const detectedGeo = document.body.getAttribute('data-detected-geo');
-  console.log('🎯 Server-side detected geo:', detectedGeo);
-  console.log('🎯 Body element attributes:', Array.from(document.body.attributes).map(attr => `${attr.name}="${attr.value}"`));
+  console.log('🎯 FIXED: Server-side detected geo from domain:', detectedGeo);
   
-  // Then check for geo parameter (overrides server-side detection)
+  // FIXED: Remove geo parameter checking - domain determines language
   const url = new URL(window.location.href);
   const geoParam = url.searchParams.get('geo');
   
-  let targetGeo = null;
-  
-  if (geoParam && ['se', 'no'].includes(geoParam)) {
-    console.log('🎯 Found geo parameter (overriding server-side):', geoParam);
-    targetGeo = geoParam;
-  } else if (detectedGeo && ['se', 'no'].includes(detectedGeo)) {
-    console.log('🎯 Using server-side detected geo:', detectedGeo);
-    targetGeo = detectedGeo;
+  // FIXED: If there's a geo parameter in URL, remove it since we use domain-based switching
+  if (geoParam) {
+    console.log('🧹 FIXED: Removing geo parameter from URL, using domain-based switching');
+    url.searchParams.delete('geo');
+    window.history.replaceState({}, '', url.href);
   }
   
-  if (targetGeo) {
-    switchToGeo(targetGeo);
+  // Use only server-side detected geo (from domain)
+  if (detectedGeo && ['se', 'no'].includes(detectedGeo)) {
+    console.log('🎯 FIXED: Using domain-based geo:', detectedGeo);
+    switchToGeo(detectedGeo);
   } else {
-    console.log('🎯 No geo detected, defaulting to Swedish content');
-    // Ensure Swedish content is shown by default
+    console.log('🎯 FIXED: No domain geo detected, defaulting to Swedish content');
     updateGeoButtons('se');
   }
 }
 
 export function switchToGeo(targetGeo) {
-  console.log('🔄 Switching to geo:', targetGeo);
+  console.log('🔄 FIXED: Switching to geo:', targetGeo);
   
   // Update page content based on geo
   updatePageContent(targetGeo);
@@ -44,10 +41,9 @@ export function switchToGeo(targetGeo) {
   // Update active geo button
   updateGeoButtons(targetGeo);
   
-  // Update URL without reload
-  const url = new URL(window.location.href);
-  url.searchParams.set('geo', targetGeo);
-  window.history.replaceState({}, '', url.href);
+  // FIXED: Do NOT modify URL with geo parameters when using domain-based switching
+  // The domain itself determines the language, not URL parameters
+  console.log('✅ FIXED: No URL modification - domain determines language');
 }
 
 function updatePageContent(geo) {
