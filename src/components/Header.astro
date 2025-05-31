@@ -18,7 +18,13 @@ try {
 }
 
 const detectedGeoSubdomain = envGeo || detectSubdomain(Astro.request, Astro.url);
-const currentGeo = detectedGeoSubdomain || 'se';
+let currentGeo = detectedGeoSubdomain || 'se';
+
+// Validate that currentGeo is one of the expected values
+if (!['se', 'no'].includes(currentGeo)) {
+  console.warn('🏠 ⚠️ HEADER: Invalid geo detected, falling back to "se":', currentGeo);
+  currentGeo = 'se';
+}
 
 console.log('🏠 DEBUG: HEADER - Geo Detection:');
 console.log('  Current URL:', currentUrl);
@@ -70,14 +76,14 @@ const homeUrl = '/';
 				<!-- Geo Navigation - moved to be left of theme toggle -->
 				<div class="geo-navigation">
 					{GEO_ITEMS.map(item => (
-						<button
+						<a
+							href={item.href}
 							class={`geo-nav-button ${item.geoSubdomain === currentGeo ? 'active' : ''}`}
 							title={`Växla till ${item.label}`}
 							data-geo={item.geoSubdomain}
-							data-href={item.href}
 						>
 							{item.flag}
-						</button>
+						</a>
 					))}
 				</div>
 				
@@ -310,18 +316,12 @@ const homeUrl = '/';
 			});
 		}
 
-		// Geo navigation functionality
-		const geoButtons = document.querySelectorAll('.geo-nav-button');
-		geoButtons.forEach(button => {
-			button.addEventListener('click', (e) => {
-				e.preventDefault();
-				const targetGeo = button.getAttribute('data-geo');
-				const targetHref = button.getAttribute('data-href');
-				
-				if (!targetGeo || !targetHref) {
-					console.error('Missing geo data attributes');
-					return;
-				}
+		// Geo navigation functionality - now using links instead of buttons
+		const geoLinks = document.querySelectorAll('.geo-nav-button');
+		geoLinks.forEach(link => {
+			link.addEventListener('click', (e) => {
+				const targetGeo = link.getAttribute('data-geo');
+				const targetHref = link.getAttribute('href');
 				
 				console.log('🌍 DEBUG: Geo navigation clicked');
 				console.log('  Target geo:', targetGeo);
@@ -329,10 +329,8 @@ const homeUrl = '/';
 				console.log('  Current hostname:', window.location.hostname);
 				console.log('  Current href:', window.location.href);
 				
-				// FIXED: Always navigate to the correct domain URL, never use geo parameters
-				// This ensures proper domain-based language switching
-				console.log('🔄 FIXED: Redirecting to domain URL:', targetHref);
-				window.location.href = targetHref;
+				// Let the browser handle the navigation naturally
+				// No need to prevent default or manually redirect
 			});
 		});
 

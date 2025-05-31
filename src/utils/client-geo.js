@@ -11,25 +11,35 @@ export function initClientGeoSwitching() {
   const detectedGeo = document.body.getAttribute('data-detected-geo');
   console.log('🎯 FIXED: Server-side detected geo from domain:', detectedGeo);
   
-  // FIXED: Remove geo parameter checking - domain determines language
+  // FIXED: Only remove geo parameters on non-localhost environments
   const url = new URL(window.location.href);
   const geoParam = url.searchParams.get('geo');
+  const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname.startsWith('127.0.0.1');
   
-  // FIXED: If there's a geo parameter in URL, remove it since we use domain-based switching
-  if (geoParam) {
-    console.log('🧹 FIXED: Removing geo parameter from URL, using domain-based switching');
+  // FIXED: Only remove geo parameter if NOT on localhost (localhost uses geo params for testing)
+  if (geoParam && !isLocalhost) {
+    console.log('🧹 FIXED: Removing geo parameter from URL (not localhost), using domain-based switching');
     url.searchParams.delete('geo');
     window.history.replaceState({}, '', url.href);
+  } else if (geoParam && isLocalhost) {
+    console.log('🏠 FIXED: Keeping geo parameter on localhost for testing:', geoParam);
   }
   
-  // Use only server-side detected geo (from domain)
-  if (detectedGeo && ['se', 'no'].includes(detectedGeo)) {
+  // FIXED: On localhost, use geo parameter; on other environments, use domain-based geo
+  let finalGeo = detectedGeo;
+  
+  if (isLocalhost && geoParam && ['se', 'no'].includes(geoParam)) {
+    console.log('🏠 FIXED: Using localhost geo parameter:', geoParam);
+    finalGeo = geoParam;
+  } else if (detectedGeo && ['se', 'no'].includes(detectedGeo)) {
     console.log('🎯 FIXED: Using domain-based geo:', detectedGeo);
-    switchToGeo(detectedGeo);
+    finalGeo = detectedGeo;
   } else {
-    console.log('🎯 FIXED: No domain geo detected, defaulting to Swedish content');
-    updateGeoButtons('se');
+    console.log('🎯 FIXED: No valid geo detected, defaulting to Swedish content');
+    finalGeo = 'se';
   }
+  
+  switchToGeo(finalGeo);
 }
 
 export function switchToGeo(targetGeo) {

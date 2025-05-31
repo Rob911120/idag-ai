@@ -1,12 +1,26 @@
 // Geo-based subdomain detection and routing utilities
 export function detectSubdomain(request, astroUrl) {
   try {
-    const url = astroUrl || new URL(request.url);
+    // Try to get URL from multiple sources to ensure we have the most current one
+    let url;
+    
+    // First try astroUrl (most reliable for current request)
+    if (astroUrl) {
+      url = astroUrl;
+    } else if (request && request.url) {
+      url = new URL(request.url);
+    } else {
+      // Fallback - this shouldn't happen but provides safety
+      console.warn('⚠️ No URL available for geo detection');
+      return 'se';
+    }
+    
     const hostname = url.hostname;
     
     console.log('🔍 DEBUG: Geo Subdomain Detection:');
     console.log('  Full URL:', url.href);
     console.log('  Hostname:', hostname);
+    console.log('  Search params:', url.search);
   
   // CRITICAL FIX: First check Cloudflare Workers environment variables
   // This ensures each worker deployment shows the correct language
@@ -29,7 +43,22 @@ export function detectSubdomain(request, astroUrl) {
     console.log('  ⚠️ Could not access environment variables:', e.message);
   }
   
-  // Check for geo query parameter (fallback for localhost)
+  // Check for localhost development environment first
+  if (hostname === 'localhost' || hostname.startsWith('127.0.0.1')) {
+    console.log('  🏠 DEBUG: Localhost detected');
+    // Check for geo query parameter (primary method for localhost)
+    const geoParam = url.searchParams.get('geo');
+    console.log('  🔍 DEBUG: Checking geo parameter:', geoParam);
+    if (geoParam && ['se', 'no'].includes(geoParam)) {
+      console.log('  🎯 DEBUG: Found valid geo query parameter:', geoParam);
+      return geoParam;
+    }
+    // Default to Swedish for localhost without geo parameter
+    console.log('  🎯 DEBUG: No valid geo parameter on localhost, defaulting to "se"');
+    return 'se';
+  }
+  
+  // Check for geo query parameter (fallback for other environments)
   const geoParam = url.searchParams.get('geo');
   if (geoParam && ['se', 'no'].includes(geoParam)) {
     console.log('  🎯 DEBUG: Found geo query parameter:', geoParam);

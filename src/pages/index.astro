@@ -1,4 +1,7 @@
 ---
+// Enable server-side rendering to read geo parameters dynamically
+export const prerender = false;
+
 import BaseHead from '../components/BaseHead.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
@@ -33,10 +36,16 @@ try {
 const detectedGeoSubdomain = envGeo || detectSubdomain(Astro.request, Astro.url);
 console.log('🎯 DEBUG: Detected geo subdomain:', detectedGeoSubdomain);
 
-// Get current geo subdomain (fallback to 'se' if none detected)
-const currentGeo = detectedGeoSubdomain || getCurrentGeoSubdomain(Astro.request.url) || 'se';
+// Get current geo subdomain - ensure we have a valid value
+let currentGeo = detectedGeoSubdomain || 'se';
 console.log('🌍 DEBUG: Final current geo:', currentGeo);
 console.log('🌍 DEBUG: This will determine language and content filtering');
+
+// Validate that currentGeo is one of the expected values
+if (!['se', 'no'].includes(currentGeo)) {
+  console.warn('⚠️ Invalid geo detected, falling back to "se":', currentGeo);
+  currentGeo = 'se';
+}
 
 // Only load collections for the current geo to improve performance
 console.log('📚 Loading collections for geo:', currentGeo);
@@ -81,27 +90,27 @@ console.log('📊 Collections loaded:', Object.keys(collections));
 // Get geo-specific content
 const countryCollections = getCountryCollections(currentGeo, collections);
 
-let allContent: any[];
-if (currentGeo) {
-  console.log('🎯 Filtering content for geo:', currentGeo);
-  // Combine all content for the current geo
-  allContent = [
-    ...countryCollections.nyheter.map((item: any) => ({ ...item, subdomain: 'nyheter', geoSubdomain: currentGeo })),
-    ...countryCollections.modeller.map((item: any) => ({ ...item, subdomain: 'modeller', geoSubdomain: currentGeo })),
-    ...countryCollections.verktyg.map((item: any) => ({ ...item, subdomain: 'verktyg', geoSubdomain: currentGeo })),
-    ...countryCollections.akademi.map((item: any) => ({ ...item, subdomain: 'akademi', geoSubdomain: currentGeo }))
-  ];
-  console.log(`📊 Found ${allContent.length} articles for ${currentGeo}`);
-} else {
-  console.log('🌐 Showing all content (no geo detected - defaulting to Swedish)');
-  // Fallback to Swedish content when no geo is detected
-  const fallbackCollections = getCountryCollections('se', collections);
-  allContent = [
-    ...fallbackCollections.nyheter.map((item: any) => ({ ...item, subdomain: 'nyheter', geoSubdomain: 'se' })),
-    ...fallbackCollections.modeller.map((item: any) => ({ ...item, subdomain: 'modeller', geoSubdomain: 'se' })),
-    ...fallbackCollections.verktyg.map((item: any) => ({ ...item, subdomain: 'verktyg', geoSubdomain: 'se' })),
-    ...fallbackCollections.akademi.map((item: any) => ({ ...item, subdomain: 'akademi', geoSubdomain: 'se' }))
-  ];
+console.log('🎯 Filtering content for geo:', currentGeo);
+console.log('📊 Available collections:', Object.keys(countryCollections));
+console.log('📊 Collection sizes:', {
+  nyheter: countryCollections.nyheter.length,
+  modeller: countryCollections.modeller.length,
+  verktyg: countryCollections.verktyg.length,
+  akademi: countryCollections.akademi.length
+});
+
+// Combine all content for the current geo
+const allContent = [
+  ...countryCollections.nyheter.map((item: any) => ({ ...item, subdomain: 'nyheter', geoSubdomain: currentGeo })),
+  ...countryCollections.modeller.map((item: any) => ({ ...item, subdomain: 'modeller', geoSubdomain: currentGeo })),
+  ...countryCollections.verktyg.map((item: any) => ({ ...item, subdomain: 'verktyg', geoSubdomain: currentGeo })),
+  ...countryCollections.akademi.map((item: any) => ({ ...item, subdomain: 'akademi', geoSubdomain: currentGeo }))
+];
+
+console.log(`📊 Total content loaded for ${currentGeo}: ${allContent.length} articles`);
+if (allContent.length === 0) {
+  console.warn('⚠️ No content found for geo:', currentGeo);
+  console.warn('⚠️ Available collections keys:', Object.keys(collections));
 }
 
 const sortedContent = allContent.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());

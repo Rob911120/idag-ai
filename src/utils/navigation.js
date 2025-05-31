@@ -11,45 +11,44 @@ export function buildGeoSubdomainUrl(geoSubdomain, currentUrl = '') {
   console.log('🔗 DEBUG: Building geo subdomain URL for:', geoSubdomain);
   console.log('  Current hostname:', hostname);
   
-  // FIXED: Always build proper domain URLs for consistent language switching
+  // FIXED: Only use geo parameters for localhost testing, real subdomains for everything else
   
-  // Check if we're in workers.dev environment (development)
-  if (hostname.includes('workers.dev')) {
-    // Build proper workers.dev subdomain URL
-    const defaultWorkerSuffix = 'rob911120.workers.dev';
-    const newUrl = `https://${geoSubdomain}-idag-ai.${defaultWorkerSuffix}`;
-    console.log('  FIXED: Workers.dev environment, built domain URL:', newUrl);
-    return newUrl;
-  }
-  
-  // Check if we're in localhost environment (local development)
+  // Check if we're in localhost environment (local development) - ONLY place to use geo parameters
   if (hostname === 'localhost' || hostname.startsWith('127.0.0.1')) {
-    // For localhost development, use geo query parameter as fallback
+    // For localhost development, use geo query parameter for testing
     const port = url.port || '4321'; // Default Astro dev server port
     const newUrl = `http://localhost:${port}?geo=${geoSubdomain}`;
-    console.log('  Localhost environment, built URL:', newUrl);
+    console.log('  Localhost environment, built URL with geo parameter:', newUrl);
     return newUrl;
   }
   
-  // Check if we're in idag.ai environment (production)
+  // Check if we're in workers.dev environment (development) - use real subdomains
+  if (hostname.includes('workers.dev')) {
+    // Extract the actual worker suffix from current hostname
+    const parts = hostname.split('.');
+    const workerSuffix = parts.slice(1).join('.'); // Get everything after the first part
+    const newUrl = `https://${geoSubdomain}-idag-ai.${workerSuffix}`;
+    console.log('  Workers.dev environment, built subdomain URL:', newUrl);
+    return newUrl;
+  }
+  
+  // Check if we're in idag.ai environment (production) - use real subdomains
   if (hostname.includes('idag.ai')) {
     const newUrl = `https://${geoSubdomain}.idag.ai`;
-    console.log('  idag.ai environment, built URL:', newUrl);
+    console.log('  idag.ai environment, built subdomain URL:', newUrl);
     return newUrl;
   }
   
-  // Check if we're in idag.se environment (production alternative)
+  // Check if we're in idag.se environment (production alternative) - use real subdomains
   if (hostname.includes('idag.se')) {
     const newUrl = `https://${geoSubdomain}.idag.se`;
-    console.log('  idag.se environment, built URL:', newUrl);
+    console.log('  idag.se environment, built subdomain URL:', newUrl);
     return newUrl;
   }
   
-  // For development/unknown environments, default to workers.dev
-  // This handles both build-time (example.com) and any other unknown hostnames
-  const defaultWorkerSuffix = 'rob911120.workers.dev';
-  const fallbackUrl = `https://${geoSubdomain}-idag-ai.${defaultWorkerSuffix}`;
-  console.log('  FIXED: Unknown environment, using workers.dev domain URL:', fallbackUrl);
+  // Default fallback to production domain with real subdomains
+  const fallbackUrl = `https://${geoSubdomain}.idag.ai`;
+  console.log('  Unknown environment, defaulting to production subdomain:', fallbackUrl);
   return fallbackUrl;
 }
 
