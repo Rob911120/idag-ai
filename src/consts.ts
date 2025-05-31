@@ -2,20 +2,50 @@
 // You can import this data from anywhere in your site by using the `import` keyword.
 
 export const SITE_TITLE = "idag.ai";
+
+// Geo-specific site descriptions
+export const SITE_DESCRIPTIONS = {
+  'se': "Idag, allt om AI. Sveriges största informationskälla inom AI.",
+  'no': "I dag, alt om AI. Norges største informasjonskilde om AI."
+} as const;
+
 export const SITE_DESCRIPTION = "Idag, allt om AI. Sveriges största informationskälla inom AI.";
+
 export const SITE_URL = import.meta.env.DEV
   ? "http://localhost:4321"
   : import.meta.env.CF_PAGES_URL
   ? import.meta.env.CF_PAGES_URL
   : "https://idag.ai";
 
-// Navigation items - links to different sections
+// Geo-specific site URLs
+export const GEO_SITE_URLS = {
+  'se': 'https://se.idag.ai',
+  'no': 'https://no.idag.ai'
+} as const;
+
+// Navigation items - links to different sections (geo-agnostic)
 export const NAV_ITEMS = [
   { href: "/nyheter", label: "Nyheter" },
   { href: "/modeller", label: "Modeller" },
   { href: "/verktyg", label: "Verktyg" },
   { href: "/akademi", label: "Akademi" },
 ] as const;
+
+// Helper function to get geo-specific site description
+export function getSiteDescription(geoSubdomain?: string): string {
+  if (geoSubdomain && geoSubdomain in SITE_DESCRIPTIONS) {
+    return SITE_DESCRIPTIONS[geoSubdomain as keyof typeof SITE_DESCRIPTIONS];
+  }
+  return SITE_DESCRIPTION;
+}
+
+// Helper function to get geo-specific site URL
+export function getSiteUrl(geoSubdomain?: string): string {
+  if (geoSubdomain && geoSubdomain in GEO_SITE_URLS) {
+    return GEO_SITE_URLS[geoSubdomain as keyof typeof GEO_SITE_URLS];
+  }
+  return SITE_URL;
+}
 
 // Hashtag categories for organizing content
 export const HASHTAG_CATEGORIES = {

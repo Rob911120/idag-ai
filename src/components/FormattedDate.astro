@@ -1,14 +1,21 @@
 ---
 interface Props {
-	date: Date;
+	date: Date | null | undefined;
 }
 
 const { date } = Astro.props;
+
+// Handle null/undefined dates
+if (!date) {
+	throw new Error('FormattedDate component requires a valid date prop');
+}
+
+const validDate = date instanceof Date ? date : new Date(date);
 ---
 
-<time datetime={date.toISOString()}>
+<time datetime={validDate.toISOString()}>
 	{
-		date.toLocaleDateString('en-us', {
+		validDate.toLocaleDateString('en-us', {
 			year: 'numeric',
 			month: 'short',
 			day: 'numeric',

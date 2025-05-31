@@ -1,11 +1,12 @@
 // Geo-based subdomain detection and routing utilities
 export function detectSubdomain(request, astroUrl) {
-  const url = astroUrl || new URL(request.url);
-  const hostname = url.hostname;
-  
-  console.log('🔍 DEBUG: Geo Subdomain Detection:');
-  console.log('  Full URL:', url.href);
-  console.log('  Hostname:', hostname);
+  try {
+    const url = astroUrl || new URL(request.url);
+    const hostname = url.hostname;
+    
+    console.log('🔍 DEBUG: Geo Subdomain Detection:');
+    console.log('  Full URL:', url.href);
+    console.log('  Hostname:', hostname);
   
   // CRITICAL FIX: First check Cloudflare Workers environment variables
   // This ensures each worker deployment shows the correct language
@@ -83,6 +84,12 @@ export function detectSubdomain(request, astroUrl) {
   
   console.log('  No valid geo subdomain detected');
   return null;
+  
+  } catch (error) {
+    console.error('🚨 Error in geo subdomain detection:', error);
+    // Fallback to default behavior
+    return null;
+  }
 }
 
 export function getGeoContent(geoSubdomain, collections) {

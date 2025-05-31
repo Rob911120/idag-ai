@@ -1,0 +1,185 @@
+---
+// Enhanced geo detection component with client-side fallbacks
+export interface Props {
+  geoSubdomain?: string;
+}
+
+const { geoSubdomain } = Astro.props;
+---
+
+<script is:inline define:vars={{ serverGeo: geoSubdomain }}>
+  (function() {
+    // Enhanced geo detection with multiple fallback methods
+    function detectGeoClient() {
+      // 1. Use server-detected geo if available
+      if (serverGeo) {
+        console.log('🌍 Using server-detected geo:', serverGeo);
+        return serverGeo;
+      }
+      
+      // 2. Check URL parameters
+      const urlParams = new URLSearchParams(window.location.search);
+      const geoParam = urlParams.get('geo');
+      if (geoParam && ['se', 'no'].includes(geoParam)) {
+        console.log('🌍 Using URL parameter geo:', geoParam);
+        return geoParam;
+      }
+      
+      // 3. Check hostname
+      const hostname = window.location.hostname;
+      if (hostname.includes('se.idag.ai') || hostname.startsWith('se-')) {
+        console.log('🌍 Detected Swedish hostname:', hostname);
+        return 'se';
+      }
+      if (hostname.includes('no.idag.ai') || hostname.startsWith('no-')) {
+        console.log('🌍 Detected Norwegian hostname:', hostname);
+        return 'no';
+      }
+      
+      // 4. Check localStorage for user preference
+      const storedGeo = localStorage.getItem('preferred_geo');
+      if (storedGeo && ['se', 'no'].includes(storedGeo)) {
+        console.log('🌍 Using stored geo preference:', storedGeo);
+        return storedGeo;
+      }
+      
+      // 5. Browser language detection
+      const browserLang = navigator.language || navigator.languages?.[0];
+      if (browserLang) {
+        if (browserLang.startsWith('sv') || browserLang.includes('SE')) {
+          console.log('🌍 Detected Swedish browser language:', browserLang);
+          return 'se';
+        }
+        if (browserLang.startsWith('no') || browserLang.startsWith('nb') || browserLang.includes('NO')) {
+          console.log('🌍 Detected Norwegian browser language:', browserLang);
+          return 'no';
+        }
+      }
+      
+      // 6. Timezone-based detection (rough approximation)
+      try {
+        const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        if (timezone === 'Europe/Stockholm') {
+          console.log('🌍 Detected Swedish timezone:', timezone);
+          return 'se';
+        }
+        if (timezone === 'Europe/Oslo') {
+          console.log('🌍 Detected Norwegian timezone:', timezone);
+          return 'no';
+        }
+      } catch (e) {
+        console.log('⚠️ Timezone detection failed:', e);
+      }
+      
+      // 7. Default fallback
+      console.log('🌍 Using default geo: se');
+      return 'se';
+    }
+    
+    // Detect and store geo information
+    const detectedGeo = detectGeoClient();
+    
+    // Store in global variable for other scripts
+    window.DETECTED_GEO = detectedGeo;
+    
+    // Store user preference
+    if (!localStorage.getItem('preferred_geo')) {
+      localStorage.setItem('preferred_geo', detectedGeo);
+    }
+    
+    // Add geo class to body for CSS targeting
+    document.body.classList.add(`geo-${detectedGeo}`);
+    
+    // Add language class
+    const language = detectedGeo === 'se' ? 'sv' : 'no';
+    document.body.classList.add(`lang-${language}`);
+    
+    // Dispatch custom event for other components
+    window.dispatchEvent(new CustomEvent('geoDetected', {
+      detail: {
+        geo: detectedGeo,
+        language: language,
+        method: 'client-side'
+      }
+    }));
+    
+    // Optional: Show geo selector if detection seems uncertain
+    function showGeoSelector() {
+      // Only show if we had to fall back to defaults
+      if (!serverGeo && !urlParams.get('geo') && !hostname.includes('idag.ai')) {
+        const banner = document.createElement('div');
+        banner.id = 'geo-selector';
+        banner.style.cssText = `
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          background: #007bff;
+          color: white;
+          padding: 0.5rem;
+          text-align: center;
+          z-index: 10001;
+          font-size: 14px;
+        `;
+        
+        banner.innerHTML = `
+          <span>Välj region / Velg region:</span>
+          <button onclick="setGeo('se')" style="margin: 0 5px; padding: 2px 8px; background: white; color: #007bff; border: none; border-radius: 3px; cursor: pointer;">
+            🇸🇪 Sverige
+          </button>
+          <button onclick="setGeo('no')" style="margin: 0 5px; padding: 2px 8px; background: white; color: #007bff; border: none; border-radius: 3px; cursor: pointer;">
+            🇳🇴 Norge
+          </button>
+          <button onclick="document.getElementById('geo-selector').remove()" style="margin-left: 10px; padding: 2px 8px; background: transparent; color: white; border: 1px solid white; border-radius: 3px; cursor: pointer;">
+            ✕
+          </button>
+        `;
+        
+        document.body.appendChild(banner);
+        
+        // Auto-hide after 10 seconds
+        setTimeout(() => {
+          if (document.getElementById('geo-selector')) {
+            banner.remove();
+          }
+        }, 10000);
+      }
+    }
+    
+    // Global function to set geo preference
+    window.setGeo = function(geo) {
+      localStorage.setItem('preferred_geo', geo);
+      const newUrl = new URL(window.location);
+      newUrl.searchParams.set('geo', geo);
+      window.location.href = newUrl.toString();
+    };
+    
+    // Show geo selector if needed (commented out by default)
+    // showGeoSelector();
+    
+    console.log('🌍 Geo detection complete:', {
+      detected: detectedGeo,
+      language: language,
+      serverGeo: serverGeo,
+      hostname: hostname,
+      browserLang: navigator.language
+    });
+  })();
+</script>
+
+<style>
+  /* Geo-specific styles */
+  :global(.geo-se) {
+    --primary-color: #006aa7; /* Swedish blue */
+  }
+  
+  :global(.geo-no) {
+    --primary-color: #ba0c2f; /* Norwegian red */
+  }
+  
+  /* Language-specific typography adjustments */
+  :global(.lang-no) {
+    /* Norwegian text might need slightly different spacing */
+    letter-spacing: 0.01em;
+  }
+</style>

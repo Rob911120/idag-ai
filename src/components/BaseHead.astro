@@ -3,7 +3,12 @@
 // all pages through the use of the <BaseHead /> component.
 import '../styles/global.css';
 import '../styles/apple-newsroom.css';
-import { SITE_TITLE, SITE_DESCRIPTION, SITE_URL } from '../consts';
+import { SITE_TITLE, SITE_DESCRIPTION, SITE_URL, getSiteDescription, getSiteUrl } from '../consts';
+import { detectSubdomain, getLanguageFromGeo } from '../utils/subdomain';
+import { getHtmlLang, getAlternateLanguages, tGeo } from '../utils/i18n';
+import StructuredData from './StructuredData.astro';
+import Analytics from './Analytics.astro';
+import GeoDetector from './GeoDetector.astro';
 
 export interface Props {
 	title: string;
@@ -11,22 +16,59 @@ export interface Props {
 	image?: string;
 	type?: 'website' | 'article';
 	publishedTime?: Date;
+	updatedTime?: Date;
 	author?: string;
+	geoSubdomain?: string;
+	category?: string;
+	tags?: string[];
 }
+
+// Detect geo subdomain for dynamic SEO
+const geoSubdomain = Astro.props.geoSubdomain || detectSubdomain(Astro.request, Astro.url);
+const language = getLanguageFromGeo(geoSubdomain);
+const htmlLang = getHtmlLang(geoSubdomain);
 
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 
-const { 
-	title, 
-	description, 
+const {
+	title,
+	description,
 	image = '/images/brand/og-default.jpg',
 	type = 'website',
 	publishedTime,
-	author 
+	updatedTime,
+	author,
+	category,
+	tags = []
 } = Astro.props;
 
 const fullTitle = title === SITE_TITLE ? title : `${title} | ${SITE_TITLE}`;
-const fullImageUrl = image.startsWith('http') ? image : new URL(image, SITE_URL);
+const geoSiteUrl = getSiteUrl(geoSubdomain);
+const fullImageUrl = image.startsWith('http') ? image : new URL(image, geoSiteUrl);
+
+// Generate alternate language links for hreflang
+const alternateLanguages = getAlternateLanguages(Astro.url.pathname);
+
+// Dynamic locale mapping
+const localeMap: Record<string, string> = {
+	'sv': 'sv_SE',
+	'no': 'nb_NO'
+};
+const ogLocale = localeMap[language] || 'sv_SE';
+
+// Dynamic keywords based on language
+const keywordsMap: Record<string, string> = {
+	'sv': 'AI, artificiell intelligens, AI-nyheter, teknik, Sverige, maskininlärning, deep learning',
+	'no': 'AI, kunstig intelligens, AI-nyheter, teknologi, Norge, maskinlæring, dyp læring'
+};
+const keywords = keywordsMap[language] || keywordsMap['sv'];
+
+// Dynamic language meta
+const languageNames: Record<string, string> = {
+	'sv': 'Swedish',
+	'no': 'Norwegian'
+};
+const languageName = languageNames[language] || 'Swedish';
 ---
 
 <!-- Theme initialization script - must run before any CSS -->
@@ -50,6 +92,9 @@ const fullImageUrl = image.startsWith('http') ? image : new URL(image, SITE_URL)
 <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 <meta name="generator" content={Astro.generator} />
 
+<!-- Language and geo-specific metadata -->
+<html lang={htmlLang} />
+
 <!-- Preconnect to external domains -->
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -61,14 +106,29 @@ const fullImageUrl = image.startsWith('http') ? image : new URL(image, SITE_URL)
 <!-- Canonical URL -->
 <link rel="canonical" href={canonicalURL} />
 
+<!-- Hreflang tags for international SEO -->
+{alternateLanguages.map(alt => (
+	<link rel="alternate" hreflang={alt.hreflang} href={alt.href} />
+))}
+
 <!-- Primary Meta Tags -->
 <title>{fullTitle}</title>
 <meta name="title" content={fullTitle} />
 <meta name="description" content={description} />
-<meta name="keywords" content="AI, artificiell intelligens, AI-nyheter, teknik, Sverige, maskininlärning, deep learning" />
-<meta name="robots" content="noindex" />
-<meta name="language" content="Swedish" />
-<meta name="author" content={author || 'idag.ai Redaktion'} />
+<meta name="keywords" content={keywords} />
+<meta name="robots" content="index, follow" />
+<meta name="language" content={languageName} />
+<meta name="author" content={author || tGeo('ui.author', geoSubdomain) || 'idag.ai Redaktion'} />
+
+<!-- Geo-specific metadata -->
+{geoSubdomain && typeof geoSubdomain === 'string' && (
+	<>
+		<meta name="geo.region" content={geoSubdomain.toUpperCase()} />
+		<meta name="geo.placename" content={geoSubdomain === 'se' ? 'Sweden' : 'Norway'} />
+		<meta name="geo.position" content={geoSubdomain === 'se' ? '59.3293;18.0686' : '59.9139;10.7522'} />
+		<meta name="ICBM" content={geoSubdomain === 'se' ? '59.3293, 18.0686' : '59.9139, 10.7522'} />
+	</>
+)}
 
 <!-- Open Graph / Facebook -->
 <meta property="og:type" content={type} />
@@ -79,7 +139,7 @@ const fullImageUrl = image.startsWith('http') ? image : new URL(image, SITE_URL)
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
 <meta property="og:site_name" content={SITE_TITLE} />
-<meta property="og:locale" content="sv_SE" />
+<meta property="og:locale" content={ogLocale} />
 
 {publishedTime && (
 	<meta property="article:published_time" content={publishedTime.toISOString()} />
@@ -102,3 +162,24 @@ const fullImageUrl = image.startsWith('http') ? image : new URL(image, SITE_URL)
 
 <!-- RSS Feed -->
 <link rel="alternate" type="application/rss+xml" title={`${SITE_TITLE} RSS Feed`} href="/rss.xml" />
+
+<!-- Structured Data -->
+<StructuredData
+	type={type}
+	title={fullTitle}
+	description={description}
+	image={fullImageUrl.toString()}
+	author={author}
+	publishedTime={publishedTime}
+	updatedTime={updatedTime}
+	geoSubdomain={geoSubdomain}
+	category={category}
+	tags={tags}
+	url={Astro.url.href}
+/>
+
+<!-- Analytics -->
+<Analytics geoSubdomain={geoSubdomain} />
+
+<!-- Enhanced Geo Detection -->
+<GeoDetector geoSubdomain={geoSubdomain} />

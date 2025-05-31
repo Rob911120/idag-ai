@@ -1,0 +1,109 @@
+---
+export interface Props {
+  geoSubdomain?: string;
+  trackingId?: string;
+}
+
+const { geoSubdomain, trackingId } = Astro.props;
+
+// Use different tracking IDs for different geos if needed
+const defaultTrackingIds = {
+  'se': 'G-XXXXXXXXXX', // Replace with actual Swedish GA4 ID
+  'no': 'G-YYYYYYYYYY'  // Replace with actual Norwegian GA4 ID
+};
+
+const finalTrackingId = trackingId || defaultTrackingIds[geoSubdomain as keyof typeof defaultTrackingIds];
+
+// Only load analytics in production
+const isProduction = import.meta.env.PROD;
+---
+
+{isProduction && finalTrackingId && (
+  <>
+    <!-- Google Analytics 4 -->
+    <script async src={`https://www.googletagmanager.com/gtag/js?id=${finalTrackingId}`}></script>
+    <script is:inline define:vars={{ trackingId: finalTrackingId, geoSubdomain }}>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      
+      gtag('config', trackingId, {
+        // Enhanced measurement
+        enhanced_measurement: true,
+        // Custom dimensions for geo tracking
+        custom_map: {
+          'custom_dimension_1': 'geo_subdomain'
+        },
+        // Set geo subdomain as custom dimension
+        geo_subdomain: geoSubdomain
+      });
+      
+      // Track geo-specific events
+      gtag('event', 'geo_detection', {
+        'geo_subdomain': geoSubdomain,
+        'event_category': 'geo',
+        'event_label': geoSubdomain
+      });
+    </script>
+    
+    <!-- Privacy-friendly analytics alternative (Plausible) -->
+    <!-- Uncomment if you prefer Plausible over Google Analytics -->
+    <!--
+    <script defer data-domain={`${geoSubdomain}.idag.ai`} src="https://plausible.io/js/script.js"></script>
+    -->
+    
+    <!-- Cookie consent banner script -->
+    <script is:inline>
+      // Simple cookie consent implementation
+      (function() {
+        const CONSENT_KEY = 'analytics_consent';
+        const hasConsent = localStorage.getItem(CONSENT_KEY);
+        
+        if (!hasConsent) {
+          // Show cookie banner
+          const banner = document.createElement('div');
+          banner.id = 'cookie-banner';
+          banner.style.cssText = `
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #333;
+            color: white;
+            padding: 1rem;
+            text-align: center;
+            z-index: 10000;
+            font-size: 14px;
+          `;
+          
+          const message = geoSubdomain === 'no' ? 
+            'Vi bruker informasjonskapsler for å forbedre din opplevelse. ' :
+            'Vi använder cookies för att förbättra din upplevelse. ';
+          
+          const acceptText = geoSubdomain === 'no' ? 'Godta' : 'Acceptera';
+          
+          banner.innerHTML = `
+            ${message}
+            <button id="accept-cookies" style="margin-left: 10px; padding: 5px 15px; background: #007bff; color: white; border: none; border-radius: 3px; cursor: pointer;">
+              ${acceptText}
+            </button>
+          `;
+          
+          document.body.appendChild(banner);
+          
+          document.getElementById('accept-cookies').addEventListener('click', function() {
+            localStorage.setItem(CONSENT_KEY, 'true');
+            banner.remove();
+            
+            // Enable analytics after consent
+            if (typeof gtag !== 'undefined') {
+              gtag('consent', 'update', {
+                'analytics_storage': 'granted'
+              });
+            }
+          });
+        }
+      })();
+    </script>
+  </>
+)}
