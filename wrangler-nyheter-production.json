@@ -1,6 +1,6 @@
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "idag-ai",
+	"name": "nyheter",
 	"compatibility_date": "2025-04-01",
 	"compatibility_flags": [
 		"nodejs_compat"
@@ -14,4 +14,8 @@
 		"enabled": true
 	},
 	"upload_source_maps": true,
+	"routes": [
+		"nyheter.idag.ai/*",
+		"www.nyheter.idag.ai/*"
+	]
 }

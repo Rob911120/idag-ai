@@ -1,6 +1,6 @@
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "idag-ai",
+	"name": "modeller-idag-ai",
 	"compatibility_date": "2025-04-01",
 	"compatibility_flags": [
 		"nodejs_compat"
@@ -13,5 +13,5 @@
 	"observability": {
 		"enabled": true
 	},
-	"upload_source_maps": true,
+	"upload_source_maps": true
 }

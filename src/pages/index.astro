@@ -7,6 +7,17 @@ import NewsGrid from '../components/news/NewsGrid.astro';
 import NotificationBanner from '../components/NotificationBanner.astro';
 import { SITE_TITLE, SITE_DESCRIPTION, HASHTAG_CATEGORIES } from '../consts';
 import { getCollection } from 'astro:content';
+import { detectSubdomain, getSubdomainContent } from '../utils/subdomain.js';
+
+// DEBUG: Log request details for subdomain detection
+console.log('🏠 INDEX PAGE - Request Analysis:');
+console.log('  Request URL:', Astro.request.url);
+console.log('  Astro URL:', Astro.url.href);
+console.log('  Pathname:', Astro.url.pathname);
+
+// Detect subdomain from request
+const detectedSubdomain = detectSubdomain(Astro.request);
+console.log('🎯 Detected subdomain:', detectedSubdomain);
 
 // Get all content from all subdomain collections
 const newsContent = await getCollection('news');
@@ -15,14 +26,32 @@ const modellerContent = await getCollection('modeller');
 const verktygContent = await getCollection('verktyg');
 const akademiContent = await getCollection('akademi');
 
-// Combine all content and sort by date
-const allContent = [
-  ...newsContent.map(item => ({ ...item, subdomain: 'nyheter' })),
-  ...nyhetarContent.map(item => ({ ...item, subdomain: 'nyheter' })),
-  ...modellerContent.map(item => ({ ...item, subdomain: 'modeller' })),
-  ...verktygContent.map(item => ({ ...item, subdomain: 'verktyg' })),
-  ...akademiContent.map(item => ({ ...item, subdomain: 'akademi' }))
-];
+// Get subdomain-specific content or all content
+const collections = {
+  news: newsContent,
+  nyheter: nyhetarContent,
+  modeller: modellerContent,
+  verktyg: verktygContent,
+  akademi: akademiContent
+};
+
+let allContent: any[];
+if (detectedSubdomain) {
+  console.log('🎯 Filtering content for subdomain:', detectedSubdomain);
+  const subdomainContent = getSubdomainContent(detectedSubdomain, collections);
+  allContent = subdomainContent ? subdomainContent.map((item: any) => ({ ...item, subdomain: detectedSubdomain })) : [];
+  console.log(`📊 Found ${allContent.length} articles for ${detectedSubdomain}`);
+} else {
+  console.log('🌐 Showing all content (no subdomain detected)');
+  // Combine all content and sort by date
+  allContent = [
+    ...newsContent.map((item: any) => ({ ...item, subdomain: 'nyheter' })),
+    ...nyhetarContent.map((item: any) => ({ ...item, subdomain: 'nyheter' })),
+    ...modellerContent.map((item: any) => ({ ...item, subdomain: 'modeller' })),
+    ...verktygContent.map((item: any) => ({ ...item, subdomain: 'verktyg' })),
+    ...akademiContent.map((item: any) => ({ ...item, subdomain: 'akademi' }))
+  ];
+}
 
 const sortedContent = allContent.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
 
@@ -53,7 +82,7 @@ const hashtagCounts = allHashtags.reduce((acc, tag) => {
 }, {} as Record<string, number>);
 
 const popularHashtags = Object.entries(hashtagCounts)
-  .sort(([,a], [,b]) => b - a)
+  .sort(([,a], [,b]) => (b as number) - (a as number))
   .slice(0, 15)
   .map(([tag]) => tag);
 
