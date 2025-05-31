@@ -5,6 +5,7 @@ import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
 import CategoryBadge from '../../components/news/CategoryBadge.astro';
 import FormattedDate from '../../components/FormattedDate.astro';
+import { HASHTAG_CATEGORIES, type HashtagKey } from '../../consts';
 
 export async function getStaticPaths() {
   const newsEntries = await getCollection('news');
@@ -16,6 +17,27 @@ export async function getStaticPaths() {
 
 const { entry } = Astro.props;
 const { Content } = await render(entry);
+
+// Get a valid category from the entry data or hashtags
+const getValidCategory = (): HashtagKey | null => {
+  // First try the category field if it exists and is valid
+  if (entry.data.category && entry.data.category in HASHTAG_CATEGORIES) {
+    return entry.data.category as HashtagKey;
+  }
+  
+  // Fallback to first valid hashtag
+  if (entry.data.hashtags && entry.data.hashtags.length > 0) {
+    for (const hashtag of entry.data.hashtags) {
+      if (hashtag in HASHTAG_CATEGORIES) {
+        return hashtag as HashtagKey;
+      }
+    }
+  }
+  
+  return null;
+};
+
+const validCategory = getValidCategory();
 ---
 
 <!doctype html>
@@ -37,7 +59,7 @@ const { Content } = await render(entry);
 			<article class="article">
 				<div class="container">
 					<header class="article-header">
-						<CategoryBadge category={entry.data.category} />
+						{validCategory && <CategoryBadge category={validCategory} />}
 						
 						<h1 class="article-title typography-hero">
 							{entry.data.title}
