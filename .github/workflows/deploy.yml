@@ -22,25 +22,25 @@ jobs:
           node-version: '18'
 
       - name: Install dependencies
-        working-directory: ./idag-ai
+        working-directory: idag-ai
         run: npm ci
 
       - name: Process uploaded content
-        working-directory: ./idag-ai
+        working-directory: idag-ai
         run: npm run process-uploaded
 
       - name: Build Astro site
-        working-directory: ./idag-ai
+        working-directory: idag-ai
         run: npm run build
 
       - name: Deploy Swedish worker (se.idag.ai)
-        working-directory: ./idag-ai
+        working-directory: idag-ai
         run: npm run deploy:se
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
 
       - name: Deploy Norwegian worker (no.idag.ai)
-        working-directory: ./idag-ai
+        working-directory: idag-ai
         run: npm run deploy:no
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
