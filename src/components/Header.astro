@@ -5,13 +5,24 @@ import { getCategoryNavigationItems } from '../utils/navigation-fixed.js';
 import { getGeoNavigationItems } from '../utils/navigation.js';
 import { detectSubdomain } from '../utils/subdomain.js';
 
-// FIXED: Use same geo detection as index.astro for consistency
+// CRITICAL FIX: Check Cloudflare Workers environment variables first (same as index.astro)
 const currentUrl = Astro.url.href;
-const detectedGeoSubdomain = detectSubdomain(Astro.request, Astro.url);
+let envGeo = null;
+try {
+  if (Astro.locals.runtime && Astro.locals.runtime.env && Astro.locals.runtime.env.GEO_SUBDOMAIN) {
+    envGeo = Astro.locals.runtime.env.GEO_SUBDOMAIN;
+    console.log('🏠 CRITICAL FIX: HEADER found environment GEO_SUBDOMAIN:', envGeo);
+  }
+} catch (e) {
+  console.log('🏠 ⚠️ HEADER could not access Cloudflare environment variables:', (e as Error).message);
+}
+
+const detectedGeoSubdomain = envGeo || detectSubdomain(Astro.request, Astro.url);
 const currentGeo = detectedGeoSubdomain || 'se';
 
 console.log('🏠 DEBUG: HEADER - Geo Detection:');
 console.log('  Current URL:', currentUrl);
+console.log('  Environment geo:', envGeo);
 console.log('  Detected geo:', detectedGeoSubdomain);
 console.log('  Final current geo:', currentGeo);
 

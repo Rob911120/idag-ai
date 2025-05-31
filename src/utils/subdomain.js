@@ -7,7 +7,28 @@ export function detectSubdomain(request, astroUrl) {
   console.log('  Full URL:', url.href);
   console.log('  Hostname:', hostname);
   
-  // First check for geo query parameter (works for all environments)
+  // CRITICAL FIX: First check Cloudflare Workers environment variables
+  // This ensures each worker deployment shows the correct language
+  try {
+    // In Cloudflare Workers, env vars are available through the runtime context
+    const runtime = globalThis.runtime || globalThis;
+    if (runtime && runtime.env && runtime.env.GEO_SUBDOMAIN) {
+      const envGeo = runtime.env.GEO_SUBDOMAIN;
+      console.log('  🎯 CRITICAL FIX: Using runtime environment GEO_SUBDOMAIN:', envGeo);
+      return envGeo;
+    }
+    
+    // Also try import.meta.env for build-time variables
+    if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.GEO_SUBDOMAIN) {
+      const envGeo = import.meta.env.GEO_SUBDOMAIN;
+      console.log('  🎯 CRITICAL FIX: Using import.meta.env GEO_SUBDOMAIN:', envGeo);
+      return envGeo;
+    }
+  } catch (e) {
+    console.log('  ⚠️ Could not access environment variables:', e.message);
+  }
+  
+  // Check for geo query parameter (fallback for localhost)
   const geoParam = url.searchParams.get('geo');
   if (geoParam && ['se', 'no'].includes(geoParam)) {
     console.log('  🎯 DEBUG: Found geo query parameter:', geoParam);
