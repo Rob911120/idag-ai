@@ -40,13 +40,20 @@ npx wrangler deploy --config wrangler-akademi.json
    akademi.idag.ai → akademi.rob911120.workers.dev
    ```
 
-## 🔄 GitHub Actions
+## 🔄 Deployment
 
-Automatisk deployment är konfigurerad i `.github/workflows/deploy.yml`.
+Deployment sker manuellt via Wrangler CLI för varje subdomän:
 
-### Secrets som behövs i GitHub:
-- `CLOUDFLARE_API_TOKEN`
-- `CLOUDFLARE_ACCOUNT_ID`
+```bash
+# Deploy huvudsida
+npx wrangler deploy --config wrangler.json
+
+# Deploy subdomäner
+npx wrangler deploy --config wrangler-nyheter.json
+npx wrangler deploy --config wrangler-modeller.json
+npx wrangler deploy --config wrangler-verktyg.json
+npx wrangler deploy --config wrangler-akademi.json
+```
 
 ### Deployment triggas automatiskt vid:
 - Push till `main` branch
