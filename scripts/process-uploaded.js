@@ -7,15 +7,17 @@ const __dirname = path.dirname(__filename);
 
 // Paths
 const uploadedDir = path.join(__dirname, '../uploaded');
-const newsDir = path.join(__dirname, '../src/content/news');
+const contentDir = path.join(__dirname, '../src/content');
 
-// Valid hashtags
-const validHashtags = [
-  'modeller', 'verktyg', 'guider', 'nyheter',
-  'analys', 'trender', 'företag'
+// Valid subdomains
+const validSubdomains = [
+  'nyheter', 'modeller', 'verktyg', 'akademi'
 ];
 
-// Function to parse frontmatter and extract hashtags
+// Valid countries
+const validCountries = ['se', 'no'];
+
+// Function to parse frontmatter and extract country/subdomain
 function parseFrontmatter(content) {
   const frontmatterRegex = /^---\n([\s\S]*?)\n---/;
   const match = content.match(frontmatterRegex);
@@ -25,7 +27,15 @@ function parseFrontmatter(content) {
   const frontmatter = match[1];
   const body = content.slice(match[0].length);
   
-  // Extract hashtags
+  // Extract country
+  const countryMatch = frontmatter.match(/country:\s*["']([^"']+)["']/);
+  const country = countryMatch ? countryMatch[1] : 'se'; // Default to Sweden
+  
+  // Extract subdomain
+  const subdomainMatch = frontmatter.match(/subdomain:\s*["']([^"']+)["']/);
+  const subdomain = subdomainMatch ? subdomainMatch[1] : null;
+  
+  // Extract hashtags (for backward compatibility)
   const hashtagsMatch = frontmatter.match(/hashtags:\s*\[(.*?)\]/s);
   let hashtags = [];
   if (hashtagsMatch) {
@@ -35,7 +45,7 @@ function parseFrontmatter(content) {
       .filter(tag => tag.length > 0);
   }
   
-  return { frontmatter, body, hashtags };
+  return { frontmatter, body, country, subdomain, hashtags };
 }
 
 // Function to generate slug from title
@@ -93,20 +103,27 @@ function processUploadedFiles() {
         continue;
       }
       
-      const { frontmatter, body, hashtags } = parsed;
+      const { frontmatter, body, country, subdomain, hashtags } = parsed;
       
-      // Validate hashtags
-      if (!hashtags || hashtags.length === 0) {
-        console.log(`❌ Inga hashtags hittades för: ${filename}`);
+      // Validate country
+      if (!validCountries.includes(country)) {
+        console.log(`❌ Ogiltigt land "${country}" för: ${filename}`);
+        console.log(`   Giltiga länder: ${validCountries.join(', ')}`);
         errorCount++;
         continue;
       }
       
-      // Check if hashtags are valid
-      const invalidHashtags = hashtags.filter(tag => !validHashtags.includes(tag));
-      if (invalidHashtags.length > 0) {
-        console.log(`❌ Ogiltiga hashtags "${invalidHashtags.join(', ')}" för: ${filename}`);
-        console.log(`   Giltiga hashtags: ${validHashtags.join(', ')}`);
+      // Validate subdomain
+      if (!subdomain) {
+        console.log(`❌ Ingen subdomain angiven för: ${filename}`);
+        console.log(`   Giltiga subdomains: ${validSubdomains.join(', ')}`);
+        errorCount++;
+        continue;
+      }
+      
+      if (!validSubdomains.includes(subdomain)) {
+        console.log(`❌ Ogiltig subdomain "${subdomain}" för: ${filename}`);
+        console.log(`   Giltiga subdomains: ${validSubdomains.join(', ')}`);
         errorCount++;
         continue;
       }
@@ -115,9 +132,9 @@ function processUploadedFiles() {
       const title = extractTitle(frontmatter);
       const slug = generateSlug(title);
       
-      // Use the first hashtag as primary category for directory structure
-      const primaryHashtag = hashtags[0];
-      const targetDir = path.join(newsDir, primaryHashtag);
+      // Create target directory based on country and subdomain
+      const collectionName = `${country}-${subdomain}`;
+      const targetDir = path.join(contentDir, country, collectionName);
       if (!fs.existsSync(targetDir)) {
         fs.mkdirSync(targetDir, { recursive: true });
       }
@@ -128,7 +145,7 @@ function processUploadedFiles() {
       
       // Check if file already exists
       if (fs.existsSync(targetPath)) {
-        console.log(`⚠️  Fil existerar redan: ${primaryHashtag}/${targetFilename}`);
+        console.log(`⚠️  Fil existerar redan: ${collectionName}/${targetFilename}`);
         // Add timestamp to make it unique
         const timestamp = new Date().toISOString().slice(0, 10);
         const uniqueFilename = `${slug}-${timestamp}.md`;
@@ -136,11 +153,11 @@ function processUploadedFiles() {
         
         // Write to unique path
         fs.writeFileSync(uniquePath, content);
-        console.log(`✅ Flyttad med unikt namn: ${primaryHashtag}/${uniqueFilename}`);
+        console.log(`✅ Flyttad med unikt namn: ${collectionName}/${uniqueFilename}`);
       } else {
         // Write to target path
         fs.writeFileSync(targetPath, content);
-        console.log(`✅ Flyttad: ${filename} → ${primaryHashtag}/${targetFilename}`);
+        console.log(`✅ Flyttad: ${filename} → ${collectionName}/${targetFilename}`);
       }
       
       // Remove original file
