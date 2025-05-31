@@ -20,7 +20,9 @@ När du pushar nya artiklar från n8n till `/uploaded` mappen:
 2. [`process-uploaded.js`](scripts/process-uploaded.js) sorterar artiklar till rätt kategori-mapp
 3. [`update-featured.js`](scripts/update-featured.js) uppdaterar featured-status
 4. Sidan byggs om automatiskt
-5. Deployas till Cloudflare Workers via Wrangler
+5. Deployas till båda geo-miljöer:
+   - Svenska: se.idag.ai
+   - Norska: no.idag.ai
 
 ## n8n Integration - Uploaded Mappen
 
@@ -94,7 +96,7 @@ npm run publish
 
 - [`src/pages/index.astro`](src/pages/index.astro) - Startsidan med smart artikel-logik
 - [`scripts/update-featured.js`](scripts/update-featured.js) - Script för featured-hantering
-- [`.github/workflows/auto-deploy.yml`](.github/workflows/auto-deploy.yml) - Automatisk deployment
+- [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) - Automatisk deployment för båda geo-miljöer
 - [`src/content.config.ts`](src/content.config.ts) - Content schema och validering
 
 ## Tips för n8n-integration
@@ -106,6 +108,28 @@ npm run publish
 5. **Bilder**: Se till att bilderna finns i `/public/` mappen
 6. **Featured**: Sätt alltid `featured: false` - systemet hanterar detta automatiskt
 
+## Geo-miljöer
+
+Systemet deployer automatiskt till båda geografiska miljöer:
+
+### Produktion
+- **Svenska**: https://se.idag.ai
+- **Norska**: https://no.idag.ai
+
+### Development
+- **Svenska**: https://se-idag-ai.rob911120.workers.dev
+- **Norska**: https://no-idag-ai.rob911120.workers.dev
+
+### Manuell geo-deployment
+```bash
+# Deploya båda miljöer
+npm run publish:geo
+
+# Eller individuellt
+npm run deploy:se  # Endast svenska
+npm run deploy:no  # Endast norska
+```
+
 ## Felsökning
 
 Om artiklar inte visas som förväntat:
@@ -113,3 +137,4 @@ Om artiklar inte visas som förväntat:
 2. Verifiera att kategorin finns i [`content.config.ts`](src/content.config.ts)
 3. Kör `npm run update-featured` lokalt för att testa
 4. Kontrollera GitHub Actions för deployment-status
+5. Verifiera att båda geo-miljöer har deployats korrekt

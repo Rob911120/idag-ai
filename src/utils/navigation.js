@@ -13,14 +13,12 @@ export function buildGeoSubdomainUrl(geoSubdomain, currentUrl = '') {
   
   // Check if we're in workers.dev environment (development)
   if (hostname.includes('workers.dev')) {
-    // Extract the worker suffix (e.g., "rob911120.workers.dev")
-    const parts = hostname.split('.');
-    if (parts.length >= 3) {
-      const workerSuffix = parts.slice(-3).join('.'); // "rob911120.workers.dev"
-      const newUrl = `https://${geoSubdomain}-idag-ai.${workerSuffix}`;
-      console.log('  Workers.dev environment, built URL:', newUrl);
-      return newUrl;
-    }
+    // For workers.dev, use query parameters for geo switching during development
+    // This allows testing without needing separate worker deployments
+    const baseUrl = `https://${hostname}`;
+    const newUrl = `${baseUrl}?geo=${geoSubdomain}`;
+    console.log('  Workers.dev environment, built URL with geo param:', newUrl);
+    return newUrl;
   }
   
   // Check if we're in localhost environment (local development)
@@ -148,6 +146,13 @@ export function getCurrentGeoSubdomain(currentUrl = '') {
   
   // Check workers.dev pattern
   if (hostname.includes('workers.dev')) {
+    // First check for geo query parameter (development testing)
+    const geoParam = url.searchParams.get('geo');
+    if (geoParam && ['se', 'no'].includes(geoParam)) {
+      return geoParam;
+    }
+    
+    // Fallback to subdomain detection
     const workerSubdomain = parts[0];
     if (workerSubdomain.includes('se-idag-ai')) return 'se';
     if (workerSubdomain.includes('no-idag-ai')) return 'no';

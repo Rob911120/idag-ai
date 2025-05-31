@@ -18,35 +18,52 @@ console.log('  Astro URL:', Astro.url.href);
 console.log('  Pathname:', Astro.url.pathname);
 
 // Detect geo subdomain from request
-const detectedGeoSubdomain = detectSubdomain(Astro.request);
+const detectedGeoSubdomain = detectSubdomain(Astro.request, Astro.url);
 console.log('🎯 Detected geo subdomain:', detectedGeoSubdomain);
 
 // Get current geo subdomain (fallback to 'se' if none detected)
 const currentGeo = detectedGeoSubdomain || getCurrentGeoSubdomain(Astro.request.url) || 'se';
 console.log('🌍 Current geo:', currentGeo);
 
-// Get country-specific collections
-const seNyhetarContent = await getCollection('se-nyheter').catch(() => []);
-const seModellerContent = await getCollection('se-modeller').catch(() => []);
-const seVerktygContent = await getCollection('se-verktyg').catch(() => []);
-const seAkademiContent = await getCollection('se-akademi').catch(() => []);
+// Only load collections for the current geo to improve performance
+console.log('📚 Loading collections for geo:', currentGeo);
+let collections = {};
 
-const noNyhetarContent = await getCollection('no-nyheter').catch(() => []);
-const noModellerContent = await getCollection('no-modeller').catch(() => []);
-const noVerktygContent = await getCollection('no-verktyg').catch(() => []);
-const noAkademiContent = await getCollection('no-akademi').catch(() => []);
+if (currentGeo === 'se') {
+  const seNyhetarContent = await getCollection('se-nyheter').catch(() => []);
+  const seModellerContent = await getCollection('se-modeller').catch(() => []);
+  const seVerktygContent = await getCollection('se-verktyg').catch(() => []);
+  const seAkademiContent = await getCollection('se-akademi').catch(() => []);
+  
+  collections = {
+    'se-nyheter': seNyhetarContent,
+    'se-modeller': seModellerContent,
+    'se-verktyg': seVerktygContent,
+    'se-akademi': seAkademiContent,
+    'no-nyheter': [],
+    'no-modeller': [],
+    'no-verktyg': [],
+    'no-akademi': []
+  };
+} else if (currentGeo === 'no') {
+  const noNyhetarContent = await getCollection('no-nyheter').catch(() => []);
+  const noModellerContent = await getCollection('no-modeller').catch(() => []);
+  const noVerktygContent = await getCollection('no-verktyg').catch(() => []);
+  const noAkademiContent = await getCollection('no-akademi').catch(() => []);
+  
+  collections = {
+    'se-nyheter': [],
+    'se-modeller': [],
+    'se-verktyg': [],
+    'se-akademi': [],
+    'no-nyheter': noNyhetarContent,
+    'no-modeller': noModellerContent,
+    'no-verktyg': noVerktygContent,
+    'no-akademi': noAkademiContent
+  };
+}
 
-// Prepare collections object
-const collections = {
-  'se-nyheter': seNyhetarContent,
-  'se-modeller': seModellerContent,
-  'se-verktyg': seVerktygContent,
-  'se-akademi': seAkademiContent,
-  'no-nyheter': noNyhetarContent,
-  'no-modeller': noModellerContent,
-  'no-verktyg': noVerktygContent,
-  'no-akademi': noAkademiContent
-};
+console.log('📊 Collections loaded:', Object.keys(collections));
 
 // Get geo-specific content
 const countryCollections = getCountryCollections(currentGeo, collections);
@@ -163,7 +180,7 @@ const htmlLang = getHtmlLang(currentGeo);
 		<BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
 		<link rel="stylesheet" href="/src/styles/apple-newsroom.css" />
 	</head>
-	<body>
+	<body data-detected-geo={currentGeo}>
 		<Header />
 		
 		<main class="main-content">
@@ -341,11 +358,15 @@ const htmlLang = getHtmlLang(currentGeo);
 		<!-- Enhanced Scripts with Animations -->
 		<script>
 			import { initScrollAnimations, initProgressiveImages } from '../utils.js';
+			import { initClientGeoSwitching } from '../utils/client-geo.js';
 			
 			document.addEventListener('DOMContentLoaded', () => {
 				// Initialize scroll animations and progressive loading
 				initScrollAnimations();
 				initProgressiveImages();
+				
+				// Initialize client-side geo switching
+				initClientGeoSwitching();
 			});
 		</script>
 		
@@ -438,10 +459,13 @@ const htmlLang = getHtmlLang(currentGeo);
 						`<a href="/?filter=${hashtag}" class="hashtag-badge hashtag-badge--${hashtag} hashtag-badge--small">#${hashtag}</a>`
 					).join('');
 					
+					// Generate correct article URL based on subdomain
+					const articleUrl = article.subdomain ? `/${article.subdomain}/${article.slug}` : `/artikel/${article.slug}`;
+					
 					return `
 						<article class="news-card">
 							<div class="news-card__image-container">
-								<a href="/artikel/${article.slug}" aria-label="Läs artikel: ${article.title}">
+								<a href="${articleUrl}" aria-label="Läs artikel: ${article.title}">
 									<img src="${article.heroImage}" alt="${article.heroImageAlt}" width="400" height="225" class="news-card__image" loading="lazy" decoding="async" />
 								</a>
 							</div>
@@ -452,7 +476,7 @@ const htmlLang = getHtmlLang(currentGeo);
 								</div>
 								
 								<h2 class="news-card__title typography-title">
-									<a href="/artikel/${article.slug}" class="news-card__link">
+									<a href="${articleUrl}" class="news-card__link">
 										${article.title}
 									</a>
 								</h2>

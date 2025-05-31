@@ -14,15 +14,26 @@ export interface Props {
     slug: string;
     readingTime?: number;
     author?: string;
+    subdomain?: 'nyheter' | 'modeller' | 'verktyg' | 'akademi';
   };
 }
 
 const { article } = Astro.props;
+
+// Generate correct article URL based on subdomain
+const getArticleUrl = () => {
+  if (article.subdomain) {
+    return `/${article.subdomain}/${article.slug}`;
+  }
+  return `/artikel/${article.slug}`;
+};
+
+const articleUrl = getArticleUrl();
 ---
 
 <article class="hero-article">
   <div class="hero-article__image-container">
-    <a href={`/artikel/${article.slug}`} aria-label={`Läs artikel: ${article.title}`}>
+    <a href={articleUrl} aria-label={`Läs artikel: ${article.title}`}>
       <Image
         src={article.heroImage}
         alt={article.heroImageAlt}
@@ -43,7 +54,7 @@ const { article } = Astro.props;
     </div>
     
     <h1 class="hero-article__title">
-      <a href={`/artikel/${article.slug}`} class="hero-article__link">
+      <a href={articleUrl} class="hero-article__link">
         {article.title}
       </a>
     </h1>

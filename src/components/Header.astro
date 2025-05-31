@@ -307,9 +307,11 @@ const homeUrl = '/';
 				
 				console.log('🌍 Geo navigation clicked:', targetGeo, targetHref);
 				
-				// For localhost development, we need to handle this differently
-				if (window.location.hostname === 'localhost' || window.location.hostname.startsWith('127.0.0.1')) {
-					// In development, we can't use subdomains, so we'll use query parameters
+				// For localhost and workers.dev development, always use URL parameter method with reload
+				if (window.location.hostname === 'localhost' ||
+				    window.location.hostname.startsWith('127.0.0.1') ||
+				    window.location.hostname.includes('workers.dev')) {
+					// Always use URL parameter method to ensure server-side content filtering
 					const currentUrl = new URL(window.location.href);
 					currentUrl.searchParams.set('geo', targetGeo);
 					console.log('🔄 Redirecting to:', currentUrl.href);

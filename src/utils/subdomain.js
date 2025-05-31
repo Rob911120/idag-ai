@@ -1,11 +1,18 @@
 // Geo-based subdomain detection and routing utilities
-export function detectSubdomain(request) {
-  const url = new URL(request.url);
+export function detectSubdomain(request, astroUrl) {
+  const url = astroUrl || new URL(request.url);
   const hostname = url.hostname;
   
   console.log('🔍 Geo Subdomain Detection Debug:');
-  console.log('  Full URL:', request.url);
+  console.log('  Full URL:', url.href);
   console.log('  Hostname:', hostname);
+  
+  // First check for geo query parameter (works for all environments)
+  const geoParam = url.searchParams.get('geo');
+  if (geoParam && ['se', 'no'].includes(geoParam)) {
+    console.log('  🎯 Found geo query parameter:', geoParam);
+    return geoParam;
+  }
   
   // Extract subdomain from hostname
   const parts = hostname.split('.');
@@ -26,7 +33,10 @@ export function detectSubdomain(request) {
     };
     
     const geoSubdomain = subdomainMap[workerSubdomain];
-    console.log('  Mapped to geo subdomain:', geoSubdomain);
+    console.log('  🎯 WORKER SUBDOMAIN MAPPING:');
+    console.log('    Input subdomain:', workerSubdomain);
+    console.log('    Mapped to geo:', geoSubdomain);
+    console.log('    Available mappings:', Object.keys(subdomainMap));
     
     return geoSubdomain || null;
   }
