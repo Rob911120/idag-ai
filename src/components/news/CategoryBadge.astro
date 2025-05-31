@@ -1,14 +1,14 @@
 ---
-import { CATEGORIES, type CategoryKey } from '../../consts';
+import { HASHTAG_CATEGORIES, type HashtagKey } from '../../consts';
 
 export interface Props {
-  category: CategoryKey;
+  category: HashtagKey;
   size?: 'small' | 'normal';
   href?: string;
 }
 
 const { category, size = 'normal', href } = Astro.props;
-const displayName = CATEGORIES[category];
+const displayName = HASHTAG_CATEGORIES[category].name;
 const categoryHref = href || `/kategori/${category}`;
 ---
 

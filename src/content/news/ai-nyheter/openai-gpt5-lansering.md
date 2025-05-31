@@ -4,10 +4,7 @@ description: "Den nya AI-modellen GPT-5 introducerar banbrytande funktioner som 
 pubDate: 2024-01-15
 heroImage: "/blog-placeholder-1.jpg"
 heroImageAlt: "OpenAI GPT-5 logotyp på modern teknisk bakgrund"
-category: "ai-nyheter"
-tags: ["OpenAI", "GPT-5", "språkmodeller", "AI-utveckling"]
-hashtags: ["senaste", "modeller"]
-featured: true
+hashtags: ["nyheter", "modeller"]
 readingTime: 4
 author: "idag.ai Redaktion"
 seoTitle: "GPT-5 lansering: Allt du behöver veta om OpenAIs nya AI-modell"

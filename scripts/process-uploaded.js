@@ -9,16 +9,13 @@ const __dirname = path.dirname(__filename);
 const uploadedDir = path.join(__dirname, '../uploaded');
 const newsDir = path.join(__dirname, '../src/content/news');
 
-// Category mapping
-const categoryMapping = {
-  'ai-nyheter': 'ai-nyheter',
-  'teknik': 'teknik',
-  'analys': 'analys',
-  'trender': 'trender',
-  'foretag': 'foretag'
-};
+// Valid hashtags
+const validHashtags = [
+  'modeller', 'verktyg', 'guider', 'nyheter',
+  'analys', 'trender', 'företag'
+];
 
-// Function to parse frontmatter and extract category
+// Function to parse frontmatter and extract hashtags
 function parseFrontmatter(content) {
   const frontmatterRegex = /^---\n([\s\S]*?)\n---/;
   const match = content.match(frontmatterRegex);
@@ -28,11 +25,17 @@ function parseFrontmatter(content) {
   const frontmatter = match[1];
   const body = content.slice(match[0].length);
   
-  // Extract category
-  const categoryMatch = frontmatter.match(/category:\s*["']?([^"'\n]+)["']?/);
-  const category = categoryMatch ? categoryMatch[1].trim() : null;
+  // Extract hashtags
+  const hashtagsMatch = frontmatter.match(/hashtags:\s*\[(.*?)\]/s);
+  let hashtags = [];
+  if (hashtagsMatch) {
+    hashtags = hashtagsMatch[1]
+      .split(',')
+      .map(tag => tag.trim().replace(/["']/g, ''))
+      .filter(tag => tag.length > 0);
+  }
   
-  return { frontmatter, body, category };
+  return { frontmatter, body, hashtags };
 }
 
 // Function to generate slug from title
@@ -90,11 +93,20 @@ function processUploadedFiles() {
         continue;
       }
       
-      const { frontmatter, body, category } = parsed;
+      const { frontmatter, body, hashtags } = parsed;
       
-      // Validate category
-      if (!category || !categoryMapping[category]) {
-        console.log(`❌ Ogiltig kategori "${category}" för: ${filename}`);
+      // Validate hashtags
+      if (!hashtags || hashtags.length === 0) {
+        console.log(`❌ Inga hashtags hittades för: ${filename}`);
+        errorCount++;
+        continue;
+      }
+      
+      // Check if hashtags are valid
+      const invalidHashtags = hashtags.filter(tag => !validHashtags.includes(tag));
+      if (invalidHashtags.length > 0) {
+        console.log(`❌ Ogiltiga hashtags "${invalidHashtags.join(', ')}" för: ${filename}`);
+        console.log(`   Giltiga hashtags: ${validHashtags.join(', ')}`);
         errorCount++;
         continue;
       }
@@ -103,8 +115,9 @@ function processUploadedFiles() {
       const title = extractTitle(frontmatter);
       const slug = generateSlug(title);
       
-      // Create target directory
-      const targetDir = path.join(newsDir, category);
+      // Use the first hashtag as primary category for directory structure
+      const primaryHashtag = hashtags[0];
+      const targetDir = path.join(newsDir, primaryHashtag);
       if (!fs.existsSync(targetDir)) {
         fs.mkdirSync(targetDir, { recursive: true });
       }
@@ -115,7 +128,7 @@ function processUploadedFiles() {
       
       // Check if file already exists
       if (fs.existsSync(targetPath)) {
-        console.log(`⚠️  Fil existerar redan: ${category}/${targetFilename}`);
+        console.log(`⚠️  Fil existerar redan: ${primaryHashtag}/${targetFilename}`);
         // Add timestamp to make it unique
         const timestamp = new Date().toISOString().slice(0, 10);
         const uniqueFilename = `${slug}-${timestamp}.md`;
@@ -123,11 +136,11 @@ function processUploadedFiles() {
         
         // Write to unique path
         fs.writeFileSync(uniquePath, content);
-        console.log(`✅ Flyttad med unikt namn: ${category}/${uniqueFilename}`);
+        console.log(`✅ Flyttad med unikt namn: ${primaryHashtag}/${uniqueFilename}`);
       } else {
         // Write to target path
         fs.writeFileSync(targetPath, content);
-        console.log(`✅ Flyttad: ${filename} → ${category}/${targetFilename}`);
+        console.log(`✅ Flyttad: ${filename} → ${primaryHashtag}/${targetFilename}`);
       }
       
       // Remove original file

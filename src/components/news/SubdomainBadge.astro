@@ -1,0 +1,82 @@
+---
+export interface Props {
+  subdomain: 'nyheter' | 'modeller' | 'verktyg' | 'akademi';
+  size?: 'small' | 'normal';
+  href?: string;
+}
+
+const { subdomain, size = 'normal', href } = Astro.props;
+
+const subdomainLabels = {
+  nyheter: 'Nyheter',
+  modeller: 'Modeller',
+  verktyg: 'Verktyg',
+  akademi: 'Akademi'
+};
+
+const subdomainHref = href || `/${subdomain}`;
+---
+
+<a href={subdomainHref} class={`subdomain-badge subdomain-badge--${subdomain} ${size === 'small' ? 'subdomain-badge--small' : ''}`}>
+  {subdomainLabels[subdomain]}
+</a>
+
+<style>
+  .subdomain-badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    background: var(--color-accent);
+    color: white;
+    text-decoration: none;
+    border-radius: 1rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+    transition: all var(--transition-normal);
+    white-space: nowrap;
+  }
+
+  .subdomain-badge:hover {
+    background: var(--color-accent-hover, #005bb5);
+    transform: translateY(-1px);
+  }
+
+  .subdomain-badge--small {
+    font-size: 0.75rem;
+    padding: 0.2rem 0.6rem;
+  }
+
+  /* Different colors for different subdomains */
+  .subdomain-badge--nyheter {
+    background: #ef4444;
+  }
+  
+  .subdomain-badge--nyheter:hover {
+    background: #dc2626;
+  }
+
+  .subdomain-badge--modeller {
+    background: #8b5cf6;
+  }
+  
+  .subdomain-badge--modeller:hover {
+    background: #7c3aed;
+  }
+
+  .subdomain-badge--verktyg {
+    background: #10b981;
+  }
+  
+  .subdomain-badge--verktyg:hover {
+    background: #059669;
+  }
+
+  .subdomain-badge--akademi {
+    background: #f59e0b;
+  }
+  
+  .subdomain-badge--akademi:hover {
+    background: #d97706;
+  }
+</style>

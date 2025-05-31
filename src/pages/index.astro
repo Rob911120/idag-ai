@@ -5,55 +5,103 @@ import Footer from '../components/Footer.astro';
 import HeroArticle from '../components/news/HeroArticle.astro';
 import NewsGrid from '../components/news/NewsGrid.astro';
 import NotificationBanner from '../components/NotificationBanner.astro';
-import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
+import { SITE_TITLE, SITE_DESCRIPTION, HASHTAG_CATEGORIES } from '../consts';
 import { getCollection } from 'astro:content';
 
-// Get all news articles and sort by date
-const allNews = await getCollection('news');
-const sortedNews = allNews.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+// Get all content from all subdomain collections
+const newsContent = await getCollection('news');
+const nyhetarContent = await getCollection('nyheter');
+const modellerContent = await getCollection('modeller');
+const verktygContent = await getCollection('verktyg');
+const akademiContent = await getCollection('akademi');
 
-// Get featured article with smart logic:
-// 1. If there's a featured article from today, use it
-// 2. Otherwise, use the most recent article (auto-feature latest)
-const today = new Date();
-const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+// Combine all content and sort by date
+const allContent = [
+  ...newsContent.map(item => ({ ...item, subdomain: 'nyheter' })),
+  ...nyhetarContent.map(item => ({ ...item, subdomain: 'nyheter' })),
+  ...modellerContent.map(item => ({ ...item, subdomain: 'modeller' })),
+  ...verktygContent.map(item => ({ ...item, subdomain: 'verktyg' })),
+  ...akademiContent.map(item => ({ ...item, subdomain: 'akademi' }))
+];
 
-const todaysFeatured = sortedNews.find(article =>
-  article.data.featured &&
-  article.data.pubDate >= todayStart
-);
+const sortedContent = allContent.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
 
-const featuredArticle = todaysFeatured || sortedNews[0];
+// Get hero article (most recent featured article or first article)
+const featuredArticle = sortedContent.find(article => article.data.featured) || sortedContent[0];
 
-// Get latest articles for grid (excluding featured)
-const latestArticles = sortedNews
+// Get latest articles for grid (excluding hero)
+const latestArticles = sortedContent
   .filter(article => article.id !== featuredArticle?.id)
-  .slice(0, 6)
+  .slice(0, 8)
   .map(article => ({
     title: article.data.title,
     description: article.data.description,
     heroImage: article.data.heroImage,
     heroImageAlt: article.data.heroImageAlt,
-    category: article.data.category,
     pubDate: article.data.pubDate,
     slug: article.id,
     readingTime: article.data.readingTime,
     hashtags: article.data.hashtags || [],
+    subdomain: article.subdomain,
   }));
 
-// Prepare featured article data
+// Extract popular hashtags from all content
+const allHashtags = allContent.flatMap(article => article.data.hashtags || []);
+const hashtagCounts = allHashtags.reduce((acc, tag) => {
+  acc[tag] = (acc[tag] || 0) + 1;
+  return acc;
+}, {} as Record<string, number>);
+
+const popularHashtags = Object.entries(hashtagCounts)
+  .sort(([,a], [,b]) => b - a)
+  .slice(0, 15)
+  .map(([tag]) => tag);
+
+// Prepare hero article data
 const heroArticleData = featuredArticle ? {
   title: featuredArticle.data.title,
   description: featuredArticle.data.description,
   heroImage: featuredArticle.data.heroImage,
   heroImageAlt: featuredArticle.data.heroImageAlt,
-  category: featuredArticle.data.category,
   pubDate: featuredArticle.data.pubDate,
   slug: featuredArticle.id,
   readingTime: featuredArticle.data.readingTime,
   author: featuredArticle.data.author,
   hashtags: featuredArticle.data.hashtags || [],
+  subdomain: featuredArticle.subdomain,
 } : null;
+
+// Subdomain navigation
+const subdomains = [
+  {
+    name: 'Nyheter',
+    description: 'Senaste AI-nyheterna',
+    href: '/nyheter',
+    icon: 'news',
+    count: newsContent.length + nyhetarContent.length
+  },
+  {
+    name: 'Modeller',
+    description: 'AI-modeller och guider',
+    href: '/modeller',
+    icon: 'models',
+    count: modellerContent.length
+  },
+  {
+    name: 'Verktyg',
+    description: 'AI-verktyg och recensioner',
+    href: '/verktyg',
+    icon: 'tools',
+    count: verktygContent.length
+  },
+  {
+    name: 'Akademi',
+    description: 'Kurser och utbildning',
+    href: '/akademi',
+    icon: 'education',
+    count: akademiContent.length
+  }
+];
 ---
 
 <!doctype html>
@@ -94,6 +142,75 @@ const heroArticleData = featuredArticle ? {
 				</section>
 			)}
 
+			<!-- Subdomain Navigation -->
+			<section class="subdomains-section section scroll-animate">
+				<div class="container">
+					<h2 class="subdomains-section__title typography-headline text-center">
+						Utforska våra områden
+					</h2>
+					<div class="subdomains-grid">
+						{subdomains.map(subdomain => (
+							<a href={subdomain.href} class="subdomain-card">
+								<div class="subdomain-card__icon">
+									{subdomain.icon === 'news' && (
+										<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+											<path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/>
+											<path d="M18 14h-8"/>
+											<path d="M15 18h-5"/>
+											<path d="M10 6h8v4h-8V6Z"/>
+										</svg>
+									)}
+									{subdomain.icon === 'models' && (
+										<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+											<path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-1.36c0-1.1.9-2 2-2h1.5V4.5A2.5 2.5 0 0 1 9.5 2Z"/>
+											<path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-1.36c0-1.1-.9-2-2-2h-1.5V4.5A2.5 2.5 0 0 0 14.5 2Z"/>
+										</svg>
+									)}
+									{subdomain.icon === 'tools' && (
+										<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+											<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+										</svg>
+									)}
+									{subdomain.icon === 'education' && (
+										<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+											<path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+											<path d="M6 12v5c3 3 9 3 12 0v-5"/>
+										</svg>
+									)}
+								</div>
+								<div class="subdomain-card__content">
+									<h3 class="subdomain-card__title typography-title">{subdomain.name}</h3>
+									<p class="subdomain-card__description typography-body">
+										{subdomain.description}
+									</p>
+									<div class="subdomain-card__count">
+										{subdomain.count} artiklar
+									</div>
+								</div>
+							</a>
+						))}
+					</div>
+				</div>
+			</section>
+
+			<!-- Popular Hashtags -->
+			{popularHashtags.length > 0 && (
+				<section class="hashtags-section section scroll-animate">
+					<div class="container">
+						<h2 class="hashtags-section__title typography-headline text-center">
+							Populära ämnen
+						</h2>
+						<div class="hashtags-cloud">
+							{popularHashtags.map(hashtag => (
+								<a href={`/tagg/${hashtag}`} class="hashtag-badge hashtag-badge--${hashtag}">
+									#{hashtag}
+								</a>
+							))}
+						</div>
+					</div>
+				</section>
+			)}
+
 			<!-- Categories Preview -->
 			<section class="categories-section section section--full-width scroll-animate">
 				<div class="container">
@@ -101,72 +218,59 @@ const heroArticleData = featuredArticle ? {
 						Utforska våra kategorier
 					</h2>
 					<div class="categories-grid">
-						<a href="/kategori/ai-nyheter" class="category-card">
-							<div class="category-card__icon">
-								<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-									<path d="M9 12l2 2 4-4"/>
-									<circle cx="12" cy="12" r="10"/>
-								</svg>
-							</div>
-							<h3 class="category-card__title typography-title">AI NYHETER</h3>
-							<p class="category-card__description typography-body">
-								De senaste nyheterna och utvecklingarna inom AI
-							</p>
-						</a>
-
-						<a href="/kategori/teknik" class="category-card">
-							<div class="category-card__icon">
-								<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-									<rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
-									<line x1="8" y1="21" x2="16" y2="21"/>
-									<line x1="12" y1="17" x2="12" y2="21"/>
-								</svg>
-							</div>
-							<h3 class="category-card__title typography-title">TEKNIK</h3>
-							<p class="category-card__description typography-body">
-								Tekniska genomgångar och djupdykningar
-							</p>
-						</a>
-
-						<a href="/kategori/analys" class="category-card">
-							<div class="category-card__icon">
-								<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-									<line x1="18" y1="20" x2="18" y2="10"/>
-									<line x1="12" y1="20" x2="12" y2="4"/>
-									<line x1="6" y1="20" x2="6" y2="14"/>
-								</svg>
-							</div>
-							<h3 class="category-card__title typography-title">ANALYS</h3>
-							<p class="category-card__description typography-body">
-								Expertanalyser och branschinsikter
-							</p>
-						</a>
-
-						<a href="/kategori/trender" class="category-card">
-							<div class="category-card__icon">
-								<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-									<polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/>
-								</svg>
-							</div>
-							<h3 class="category-card__title typography-title">TRENDER</h3>
-							<p class="category-card__description typography-body">
-								Framtidstrender och prognoser inom AI
-							</p>
-						</a>
-
-						<a href="/kategori/foretag" class="category-card">
-							<div class="category-card__icon">
-								<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-									<path d="M3 21h18"/>
-									<path d="M5 21V7l8-4v18"/>
-									<path d="M19 21V11l-6-4"/>
-								</svg>
-							</div>
-							<h3 class="category-card__title typography-title">FÖRETAG</h3>
-							<p class="category-card__description typography-body">
-								Företagsnyheter och investeringar
-							</p>
-						</a>
+						{Object.entries(HASHTAG_CATEGORIES).map(([key, category]) => (
+							<a href={`/?filter=${key}`} class="category-card">
+								<div class="category-card__icon">
+									{key === 'modeller' && (
+										<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+											<path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-1.36c0-1.1.9-2 2-2h1.5V4.5A2.5 2.5 0 0 1 9.5 2Z"/>
+											<path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-1.36c0-1.1-.9-2-2-2h-1.5V4.5A2.5 2.5 0 0 0 14.5 2Z"/>
+										</svg>
+									)}
+									{key === 'verktyg' && (
+										<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+											<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+										</svg>
+									)}
+									{key === 'guider' && (
+										<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+											<path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/>
+										</svg>
+									)}
+									{key === 'nyheter' && (
+										<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+											<path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/>
+											<path d="M18 14h-8"/>
+											<path d="M15 18h-5"/>
+											<path d="M10 6h8v4h-8V6Z"/>
+										</svg>
+									)}
+									{key === 'analys' && (
+										<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+											<line x1="18" y1="20" x2="18" y2="10"/>
+											<line x1="12" y1="20" x2="12" y2="4"/>
+											<line x1="6" y1="20" x2="6" y2="14"/>
+										</svg>
+									)}
+									{key === 'trender' && (
+										<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+											<polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/>
+										</svg>
+									)}
+									{key === 'företag' && (
+										<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+											<path d="M3 21h18"/>
+											<path d="M5 21V7l8-4v18"/>
+											<path d="M19 21V11l-6-4"/>
+										</svg>
+									)}
+								</div>
+								<h3 class="category-card__title typography-title">{category.name}</h3>
+								<p class="category-card__description typography-body">
+									{category.description}
+								</p>
+							</a>
+						))}
 					</div>
 				</div>
 			</section>
@@ -274,24 +378,38 @@ const heroArticleData = featuredArticle ? {
 				}
 
 				function createArticleCard(article) {
+					const hashtagsHtml = article.hashtags.slice(0, 2).map(hashtag =>
+						`<a href="/?filter=${hashtag}" class="hashtag-badge hashtag-badge--${hashtag} hashtag-badge--small">#${hashtag}</a>`
+					).join('');
+					
 					return `
 						<article class="news-card">
-							<a href="/artikel/${article.slug}" class="news-card__link">
-								<div class="news-card__image">
-									<img src="${article.heroImage}" alt="${article.heroImageAlt}" loading="lazy" />
+							<div class="news-card__image-container">
+								<a href="/artikel/${article.slug}" aria-label="Läs artikel: ${article.title}">
+									<img src="${article.heroImage}" alt="${article.heroImageAlt}" width="400" height="225" class="news-card__image" loading="lazy" decoding="async" />
+								</a>
+							</div>
+							
+							<div class="news-card__content">
+								<div class="news-card__hashtags">
+									${hashtagsHtml}
 								</div>
-								<div class="news-card__content">
-									<div class="news-card__meta">
-										<span class="category-badge category-badge--${article.category}">${article.category.toUpperCase()}</span>
-										<time class="news-card__date">${new Date(article.pubDate).toLocaleDateString('sv-SE')}</time>
-									</div>
-									<h3 class="news-card__title typography-title">${article.title}</h3>
-									<p class="news-card__description typography-body">${article.description}</p>
-									<div class="news-card__footer">
-										<span class="news-card__reading-time">${article.readingTime} min läsning</span>
-									</div>
+								
+								<h2 class="news-card__title typography-title">
+									<a href="/artikel/${article.slug}" class="news-card__link">
+										${article.title}
+									</a>
+								</h2>
+								
+								<p class="news-card__description typography-body">
+									${article.description}
+								</p>
+								
+								<div class="news-card__meta">
+									<time class="news-card__date typography-small">${new Date(article.pubDate).toLocaleDateString('sv-SE')}</time>
+									${article.readingTime ? `<span class="news-card__reading-time typography-small">${article.readingTime} min läsning</span>` : ''}
 								</div>
-							</a>
+							</div>
 						</article>
 					`;
 				}
@@ -395,6 +513,162 @@ const heroArticleData = featuredArticle ? {
 		color: var(--text-secondary);
 	}
 
+	/* Subdomains Section */
+	.subdomains-section {
+		background-color: var(--bg-secondary);
+		width: 100%;
+	}
+
+	.subdomains-section__title {
+		margin: 0 0 var(--spacing-2xl, 4rem) 0;
+		color: var(--text-primary);
+	}
+
+	.subdomains-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+		gap: var(--spacing-lg, 2rem);
+	}
+
+	.subdomain-card {
+		display: flex;
+		align-items: center;
+		gap: var(--spacing-lg, 2rem);
+		padding: var(--spacing-xl, 3rem);
+		background: var(--tile-background);
+		border-radius: var(--border-radius, 12px);
+		border: 1px solid var(--color-border);
+		text-decoration: none;
+		color: inherit;
+		transition: all var(--transition-normal);
+		box-shadow: var(--shadow-sm);
+	}
+
+	.subdomain-card:hover {
+		transform: translateY(-4px);
+		box-shadow: var(--shadow-hover);
+	}
+
+	.subdomain-card__icon {
+		color: var(--color-accent);
+		flex-shrink: 0;
+	}
+
+	.subdomain-card__content {
+		flex: 1;
+	}
+
+	.subdomain-card__title {
+		margin: 0 0 var(--spacing-xs, 0.5rem) 0;
+		color: var(--text-primary);
+	}
+
+	.subdomain-card__description {
+		margin: 0 0 var(--spacing-xs, 0.5rem) 0;
+		color: var(--text-secondary);
+	}
+
+	.subdomain-card__count {
+		font-size: 0.875rem;
+		color: var(--color-accent);
+		font-weight: 600;
+	}
+
+	/* Hashtags Section */
+	.hashtags-section {
+		background-color: var(--bg-primary);
+		width: 100%;
+	}
+
+	.hashtags-section__title {
+		margin: 0 0 var(--spacing-xl, 3rem) 0;
+		color: var(--text-primary);
+	}
+
+	.hashtags-cloud {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--spacing-sm, 1rem);
+		justify-content: center;
+		align-items: center;
+	}
+
+	.hashtag-badge {
+		display: inline-block;
+		padding: 0.25rem 0.75rem;
+		background: var(--color-accent);
+		color: white;
+		text-decoration: none;
+		border-radius: 1rem;
+		font-size: 0.875rem;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.025em;
+		transition: all var(--transition-normal);
+		white-space: nowrap;
+	}
+
+	.hashtag-badge:hover {
+		background: var(--color-accent-hover);
+		transform: translateY(-1px);
+	}
+
+	/* Different colors for different hashtags */
+	.hashtag-badge--modeller {
+		background: #8b5cf6;
+	}
+	
+	.hashtag-badge--modeller:hover {
+		background: #7c3aed;
+	}
+
+	.hashtag-badge--verktyg {
+		background: #10b981;
+	}
+	
+	.hashtag-badge--verktyg:hover {
+		background: #059669;
+	}
+
+	.hashtag-badge--guider {
+		background: #f59e0b;
+	}
+	
+	.hashtag-badge--guider:hover {
+		background: #d97706;
+	}
+
+	.hashtag-badge--nyheter {
+		background: #ef4444;
+	}
+	
+	.hashtag-badge--nyheter:hover {
+		background: #dc2626;
+	}
+
+	.hashtag-badge--analys {
+		background: #3b82f6;
+	}
+	
+	.hashtag-badge--analys:hover {
+		background: #2563eb;
+	}
+
+	.hashtag-badge--trender {
+		background: #ec4899;
+	}
+	
+	.hashtag-badge--trender:hover {
+		background: #db2777;
+	}
+
+	.hashtag-badge--företag {
+		background: #6366f1;
+	}
+	
+	.hashtag-badge--företag:hover {
+		background: #4f46e5;
+	}
 
 	/* Enhanced Mobile Responsive */
 	@media (max-width: 480px) {
@@ -408,6 +682,23 @@ const heroArticleData = featuredArticle ? {
 			padding: 0 var(--spacing-sm, 1rem);
 		}
 
+		.subdomains-grid {
+			grid-template-columns: 1fr;
+			gap: var(--spacing-md, 1.5rem);
+		}
+
+		.subdomain-card {
+			flex-direction: column;
+			text-align: center;
+			gap: var(--spacing-md, 1.5rem);
+			padding: var(--spacing-lg, 2rem);
+			margin: 0 var(--spacing-xs, 0.5rem);
+		}
+
+		.hashtags-cloud {
+			gap: var(--spacing-xs, 0.5rem);
+		}
+
 		.categories-grid {
 			grid-template-columns: 1fr;
 			gap: var(--spacing-sm, 1rem);
@@ -418,8 +709,9 @@ const heroArticleData = featuredArticle ? {
 			margin: 0 var(--spacing-xs, 0.5rem);
 		}
 
-
-		.categories-section__title {
+		.categories-section__title,
+		.subdomains-section__title,
+		.hashtags-section__title {
 			margin-bottom: var(--spacing-lg, 2rem);
 			padding: 0 var(--spacing-sm, 1rem);
 		}
@@ -448,5 +740,191 @@ const heroArticleData = featuredArticle ? {
 		.category-card {
 			padding: var(--spacing-2xl, 4rem) var(--spacing-lg, 2rem);
 		}
+	}
+
+	/* News Card Styles for JavaScript-generated cards */
+	.news-card {
+		display: flex;
+		flex-direction: column;
+		background: var(--color-background);
+		border-radius: var(--border-radius);
+		overflow: hidden;
+		transition: transform var(--transition-normal), box-shadow var(--transition-normal), background var(--transition-normal), border-color var(--transition-normal);
+		border: 1px solid var(--color-border);
+		height: 100%;
+	}
+
+	.news-card:hover {
+		transform: translateY(-4px);
+		box-shadow: var(--shadow-hover);
+	}
+
+	.news-card__image-container {
+		position: relative;
+		overflow: hidden;
+		aspect-ratio: 16/9;
+	}
+
+	.news-card__image-container a {
+		display: block;
+		width: 100%;
+		height: 100%;
+	}
+
+	.news-card__image {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		transition: transform var(--transition-normal);
+	}
+
+	.news-card:hover .news-card__image {
+		transform: scale(1.05);
+	}
+
+	.news-card__content {
+		padding: var(--spacing-md);
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing-sm);
+		flex: 1;
+	}
+
+	.news-card__title {
+		flex: 1;
+		margin: 0;
+	}
+
+	.news-card__link {
+		text-decoration: none;
+		color: inherit;
+		transition: color var(--transition-normal);
+	}
+
+	.news-card__link:hover {
+		color: var(--color-accent);
+	}
+
+	.news-card__description {
+		color: var(--color-secondary);
+		display: -webkit-box;
+		-webkit-line-clamp: 3;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
+		margin: 0;
+	}
+
+	.news-card__meta {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-top: auto;
+		padding-top: var(--spacing-sm);
+		color: var(--color-secondary);
+	}
+
+	.news-card__reading-time {
+		color: var(--color-secondary);
+	}
+
+	.category-badge--small {
+		font-size: 0.75rem;
+		padding: 0.25rem 0.5rem;
+	}
+
+	/* Mobile adjustments for news cards */
+	@media (max-width: 480px) {
+		.news-card__content {
+			padding: var(--spacing-sm);
+		}
+		
+		.news-card__meta {
+			flex-direction: column;
+			align-items: flex-start;
+			gap: 0.25rem;
+		}
+	}
+
+	/* Hashtag badge styles for JavaScript-generated cards */
+	.hashtag-badge {
+		display: inline-block;
+		padding: 0.25rem 0.75rem;
+		background: var(--color-accent);
+		color: white;
+		text-decoration: none;
+		border-radius: 1rem;
+		font-size: 0.875rem;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.025em;
+		transition: all var(--transition-normal);
+		white-space: nowrap;
+	}
+
+	.hashtag-badge:hover {
+		background: var(--color-accent-hover, #005bb5);
+		transform: translateY(-1px);
+	}
+
+	.hashtag-badge--small {
+		font-size: 0.75rem;
+		padding: 0.2rem 0.6rem;
+	}
+
+	/* Different colors for different hashtags */
+	.hashtag-badge--modeller {
+		background: #8b5cf6;
+	}
+	
+	.hashtag-badge--modeller:hover {
+		background: #7c3aed;
+	}
+
+	.hashtag-badge--verktyg {
+		background: #10b981;
+	}
+	
+	.hashtag-badge--verktyg:hover {
+		background: #059669;
+	}
+
+	.hashtag-badge--guider {
+		background: #f59e0b;
+	}
+	
+	.hashtag-badge--guider:hover {
+		background: #d97706;
+	}
+
+	.hashtag-badge--nyheter {
+		background: #ef4444;
+	}
+	
+	.hashtag-badge--nyheter:hover {
+		background: #dc2626;
+	}
+
+	.hashtag-badge--analys {
+		background: #3b82f6;
+	}
+	
+	.hashtag-badge--analys:hover {
+		background: #2563eb;
+	}
+
+	.hashtag-badge--trender {
+		background: #ec4899;
+	}
+	
+	.hashtag-badge--trender:hover {
+		background: #db2777;
+	}
+
+	.hashtag-badge--företag {
+		background: #6366f1;
+	}
+	
+	.hashtag-badge--företag:hover {
+		background: #4f46e5;
 	}
 </style>

@@ -1,0 +1,99 @@
+---
+export interface Props {
+  hashtag: string;
+  size?: 'small' | 'normal';
+  href?: string;
+  subdomain?: string;
+}
+
+const { hashtag, size = 'normal', href, subdomain } = Astro.props;
+const hashtagHref = href || `/tagg/${hashtag}`;
+---
+
+<a href={hashtagHref} class={`hashtag-badge hashtag-badge--${hashtag} ${size === 'small' ? 'hashtag-badge--small' : ''}`}>
+  #{hashtag}
+</a>
+
+<style>
+  .hashtag-badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    background: var(--color-accent);
+    color: white;
+    text-decoration: none;
+    border-radius: 1rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+    transition: all var(--transition-normal);
+    white-space: nowrap;
+  }
+
+  .hashtag-badge:hover {
+    background: var(--color-accent-hover, #005bb5);
+    transform: translateY(-1px);
+  }
+
+  .hashtag-badge--small {
+    font-size: 0.75rem;
+    padding: 0.2rem 0.6rem;
+  }
+
+  /* Different colors for different hashtags */
+  .hashtag-badge--modeller {
+    background: #8b5cf6;
+  }
+  
+  .hashtag-badge--modeller:hover {
+    background: #7c3aed;
+  }
+
+  .hashtag-badge--verktyg {
+    background: #10b981;
+  }
+  
+  .hashtag-badge--verktyg:hover {
+    background: #059669;
+  }
+
+  .hashtag-badge--guider {
+    background: #f59e0b;
+  }
+  
+  .hashtag-badge--guider:hover {
+    background: #d97706;
+  }
+
+  .hashtag-badge--nyheter {
+    background: #ef4444;
+  }
+  
+  .hashtag-badge--nyheter:hover {
+    background: #dc2626;
+  }
+
+  .hashtag-badge--analys {
+    background: #3b82f6;
+  }
+  
+  .hashtag-badge--analys:hover {
+    background: #2563eb;
+  }
+
+  .hashtag-badge--trender {
+    background: #ec4899;
+  }
+  
+  .hashtag-badge--trender:hover {
+    background: #db2777;
+  }
+
+  .hashtag-badge--företag {
+    background: #6366f1;
+  }
+  
+  .hashtag-badge--företag:hover {
+    background: #4f46e5;
+  }
+</style>

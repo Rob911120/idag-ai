@@ -1,0 +1,569 @@
+---
+import BaseHead from '../../components/BaseHead.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import HeroArticle from '../../components/news/HeroArticle.astro';
+import NewsGrid from '../../components/news/NewsGrid.astro';
+import HashtagBadge from '../../components/news/HashtagBadge.astro';
+import NotificationBanner from '../../components/NotificationBanner.astro';
+import { SITE_TITLE, SITE_DESCRIPTION } from '../../consts';
+import { getCollection } from 'astro:content';
+
+// Get all content from akademi collection
+const akademiContent = await getCollection('akademi');
+
+// Sort by date and priority
+const sortedContent = akademiContent.sort((a, b) => {
+  // First sort by priority (higher priority first)
+  if (a.data.priority !== b.data.priority) {
+    return (b.data.priority || 5) - (a.data.priority || 5);
+  }
+  // Then by date
+  return b.data.pubDate.valueOf() - a.data.pubDate.valueOf();
+});
+
+// Get featured/hero article
+const featuredArticle = sortedContent.find(article => article.data.featured) || sortedContent[0];
+
+// Get latest articles for grid (excluding hero)
+const latestArticles = sortedContent
+  .filter(article => article.id !== featuredArticle?.id)
+  .slice(0, 8)
+  .map(article => ({
+    title: article.data.title,
+    description: article.data.description,
+    heroImage: article.data.heroImage,
+    heroImageAlt: article.data.heroImageAlt,
+    pubDate: article.data.pubDate,
+    slug: article.id,
+    readingTime: article.data.readingTime,
+    hashtags: article.data.hashtags || [],
+    subdomain: 'akademi',
+  }));
+
+// Prepare hero article data
+const heroArticleData = featuredArticle ? {
+  title: featuredArticle.data.title,
+  description: featuredArticle.data.description,
+  heroImage: featuredArticle.data.heroImage,
+  heroImageAlt: featuredArticle.data.heroImageAlt,
+  pubDate: featuredArticle.data.pubDate,
+  slug: featuredArticle.id,
+  readingTime: featuredArticle.data.readingTime,
+  author: featuredArticle.data.author,
+  hashtags: featuredArticle.data.hashtags || [],
+  subdomain: 'akademi',
+} : null;
+
+// Extract popular hashtags from akademi content
+const allHashtags = akademiContent.flatMap(article => article.data.hashtags || []);
+const hashtagCounts = allHashtags.reduce((acc, tag) => {
+  acc[tag] = (acc[tag] || 0) + 1;
+  return acc;
+}, {} as Record<string, number>);
+
+const popularHashtags = Object.entries(hashtagCounts)
+  .sort(([,a], [,b]) => b - a)
+  .slice(0, 10)
+  .map(([tag]) => tag);
+
+// Learning paths for quick navigation
+const learningPaths = [
+  {
+    name: 'AI-Grundkurs',
+    description: 'Lär dig grunderna i artificiell intelligens',
+    icon: 'foundation',
+    difficulty: 'nybörjare',
+    duration: '4 veckor'
+  },
+  {
+    name: 'Prompt Engineering',
+    description: 'Behärska konsten att kommunicera med AI',
+    icon: 'prompt',
+    difficulty: 'medel',
+    duration: '2 veckor'
+  },
+  {
+    name: 'AI för Business',
+    description: 'Implementera AI i ditt företag',
+    icon: 'business',
+    difficulty: 'medel',
+    duration: '6 veckor'
+  },
+  {
+    name: 'Avancerad AI',
+    description: 'Djupdyk i maskininlärning och neural networks',
+    icon: 'advanced',
+    difficulty: 'avancerad',
+    duration: '8 veckor'
+  }
+];
+
+// SEO data
+const pageTitle = "AI-Akademi - Lär dig AI från grunden | idag.ai";
+const pageDescription = "Lär dig artificiell intelligens från grunden. Kurser, guider och tutorials inom AI, maskininlärning och prompt engineering för alla nivåer.";
+---
+
+<!doctype html>
+<html lang="sv">
+	<head>
+		<BaseHead title={pageTitle} description={pageDescription} />
+		<link rel="stylesheet" href="/src/styles/apple-newsroom.css" />
+		<link rel="canonical" href="https://idag.ai/akademi/" />
+		<meta property="og:type" content="website" />
+		<meta property="og:title" content={pageTitle} />
+		<meta property="og:description" content={pageDescription} />
+		<meta property="og:url" content="https://idag.ai/akademi/" />
+		<meta name="twitter:card" content="summary_large_image" />
+		<meta name="twitter:title" content={pageTitle} />
+		<meta name="twitter:description" content={pageDescription} />
+		<link rel="alternate" type="application/rss+xml" title="idag.ai AI-Akademi RSS" href="/akademi/rss.xml" />
+	</head>
+	<body>
+		<Header />
+		
+		<main class="main-content">
+			<!-- Hero Section -->
+			<section class="hero-section section--hero section--full-width scroll-animate">
+				<div class="container">
+					<div class="hero-intro scroll-animate">
+						<h1 class="hero-intro__title typography-hero">AI-Akademi</h1>
+						<p class="hero-intro__subtitle typography-body">
+							Lär dig artificiell intelligens från grunden. Kurser, guider och tutorials 
+							inom AI, maskininlärning och prompt engineering för alla nivåer.
+						</p>
+					</div>
+					
+					{heroArticleData && (
+						<HeroArticle article={heroArticleData} />
+					)}
+				</div>
+			</section>
+
+			<!-- Learning Paths -->
+			<section class="learning-paths-section section scroll-animate">
+				<div class="container">
+					<h2 class="learning-paths-section__title typography-headline text-center">
+						Välj din lärandeväg
+					</h2>
+					<div class="learning-paths-grid">
+						{learningPaths.map(path => (
+							<div class="learning-path-card">
+								<div class="learning-path-card__header">
+									<div class="learning-path-card__icon">
+										{path.icon === 'foundation' && (
+											<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+												<path d="M3 21h18"/>
+												<path d="M5 21V7l8-4v18"/>
+												<path d="M19 21V11l-6-4"/>
+											</svg>
+										)}
+										{path.icon === 'prompt' && (
+											<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+												<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+												<path d="M13 8H7"/>
+												<path d="M17 12H7"/>
+											</svg>
+										)}
+										{path.icon === 'business' && (
+											<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+												<path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+												<rect width="20" height="14" x="2" y="6" rx="2"/>
+											</svg>
+										)}
+										{path.icon === 'advanced' && (
+											<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+												<path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-1.36c0-1.1.9-2 2-2h1.5V4.5A2.5 2.5 0 0 1 9.5 2Z"/>
+												<path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-1.36c0-1.1-.9-2-2-2h-1.5V4.5A2.5 2.5 0 0 0 14.5 2Z"/>
+											</svg>
+										)}
+									</div>
+									<div class={`learning-path-card__difficulty learning-path-card__difficulty--${path.difficulty}`}>
+										{path.difficulty}
+									</div>
+								</div>
+								<h3 class="learning-path-card__title typography-title">{path.name}</h3>
+								<p class="learning-path-card__description typography-body">
+									{path.description}
+								</p>
+								<div class="learning-path-card__meta">
+									<span class="learning-path-card__duration">📅 {path.duration}</span>
+								</div>
+								<a href={`/akademi?path=${path.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}`} class="learning-path-card__button">
+									Börja lära
+								</a>
+							</div>
+						))}
+					</div>
+				</div>
+			</section>
+
+			<!-- Popular Hashtags -->
+			{popularHashtags.length > 0 && (
+				<section class="hashtags-section section scroll-animate">
+					<div class="container">
+						<h2 class="hashtags-section__title typography-headline text-center">
+							Populära ämnen
+						</h2>
+						<div class="hashtags-cloud">
+							{popularHashtags.map(hashtag => (
+								<HashtagBadge hashtag={hashtag} size="normal" />
+							))}
+						</div>
+					</div>
+				</section>
+			)}
+
+			<!-- Latest Courses Grid -->
+			{latestArticles.length > 0 && (
+				<section class="news-section section section--full-width scroll-animate">
+					<div class="container">
+						<NewsGrid
+							articles={latestArticles}
+							title="Senaste kurserna och guiderna"
+							columns="three"
+						/>
+					</div>
+				</section>
+			)}
+
+			<!-- Learning Resources -->
+			<section class="resources-section section scroll-animate">
+				<div class="container">
+					<h2 class="resources-section__title typography-headline text-center">
+						Lärresurser
+					</h2>
+					<div class="resources-grid">
+						<div class="resource-card">
+							<div class="resource-card__icon">
+								<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+									<path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/>
+								</svg>
+							</div>
+							<h3 class="resource-card__title">Interaktiva Guider</h3>
+							<p class="resource-card__description">
+								Steg-för-steg guider med praktiska övningar och exempel
+							</p>
+						</div>
+						
+						<div class="resource-card">
+							<div class="resource-card__icon">
+								<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+									<polygon points="23 7,16 12,23 17,23 7"/>
+									<rect width="15" height="14" x="1" y="5" rx="2" ry="2"/>
+								</svg>
+							</div>
+							<h3 class="resource-card__title">Video Tutorials</h3>
+							<p class="resource-card__description">
+								Visuell inlärning med detaljerade videogenomgångar
+							</p>
+						</div>
+						
+						<div class="resource-card">
+							<div class="resource-card__icon">
+								<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+									<path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+									<rect width="8" height="4" x="8" y="2" rx="1" ry="1"/>
+									<path d="m9 14 2 2 4-4"/>
+								</svg>
+							</div>
+							<h3 class="resource-card__title">Praktiska Övningar</h3>
+							<p class="resource-card__description">
+								Hands-on övningar för att tillämpa det du lärt dig
+							</p>
+						</div>
+						
+						<div class="resource-card">
+							<div class="resource-card__icon">
+								<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+									<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+									<circle cx="9" cy="7" r="4"/>
+									<path d="m22 21-3-3"/>
+									<circle cx="17" cy="17" r="3"/>
+								</svg>
+							</div>
+							<h3 class="resource-card__title">Expert Community</h3>
+							<p class="resource-card__description">
+								Få hjälp och diskutera med andra AI-entusiaster
+							</p>
+						</div>
+					</div>
+				</div>
+			</section>
+
+		</main>
+		
+		<Footer />
+		
+		<NotificationBanner />
+
+		<!-- Enhanced Scripts -->
+		<script>
+			import { initScrollAnimations, initProgressiveImages } from '../../utils.js';
+			
+			document.addEventListener('DOMContentLoaded', () => {
+				initScrollAnimations();
+				initProgressiveImages();
+			});
+		</script>
+	</body>
+</html>
+
+<style>
+	/* Main Content Container */
+	.main-content {
+		width: 100%;
+		min-height: 100vh;
+		display: flex;
+		flex-direction: column;
+	}
+
+	/* Hero Section */
+	.hero-section {
+		background-color: var(--bg-primary);
+		width: 100%;
+		position: relative;
+	}
+
+	.hero-intro {
+		text-align: center;
+		margin-bottom: var(--spacing-2xl, 4rem);
+	}
+
+	.hero-intro__title {
+		margin: 0 0 var(--spacing-md, 1.5rem) 0;
+		color: var(--text-primary);
+	}
+
+	.hero-intro__subtitle {
+		margin: 0;
+		color: var(--text-secondary);
+		font-size: 1.125rem;
+		max-width: 700px;
+		margin-left: auto;
+		margin-right: auto;
+	}
+
+	/* Learning Paths Section */
+	.learning-paths-section {
+		background-color: var(--bg-secondary);
+		width: 100%;
+	}
+
+	.learning-paths-section__title {
+		margin: 0 0 var(--spacing-2xl, 4rem) 0;
+		color: var(--text-primary);
+	}
+
+	.learning-paths-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+		gap: var(--spacing-lg, 2rem);
+	}
+
+	.learning-path-card {
+		background: var(--tile-background);
+		border-radius: var(--border-radius, 12px);
+		padding: var(--spacing-xl, 3rem);
+		border: 1px solid var(--color-border);
+		transition: all var(--transition-normal);
+		box-shadow: var(--shadow-sm);
+		position: relative;
+		display: flex;
+		flex-direction: column;
+	}
+
+	.learning-path-card:hover {
+		transform: translateY(-4px);
+		box-shadow: var(--shadow-hover);
+	}
+
+	.learning-path-card__header {
+		display: flex;
+		justify-content: space-between;
+		align-items: flex-start;
+		margin-bottom: var(--spacing-md, 1.5rem);
+	}
+
+	.learning-path-card__icon {
+		color: var(--color-accent);
+	}
+
+	.learning-path-card__difficulty {
+		padding: 0.25rem 0.75rem;
+		border-radius: 1rem;
+		font-size: 0.75rem;
+		font-weight: 600;
+		text-transform: uppercase;
+	}
+
+	.learning-path-card__difficulty--nybörjare {
+		background: #10b981;
+		color: white;
+	}
+
+	.learning-path-card__difficulty--medel {
+		background: #f59e0b;
+		color: white;
+	}
+
+	.learning-path-card__difficulty--avancerad {
+		background: #ef4444;
+		color: white;
+	}
+
+	.learning-path-card__title {
+		margin: 0 0 var(--spacing-sm, 1rem) 0;
+		color: var(--text-primary);
+	}
+
+	.learning-path-card__description {
+		margin: 0 0 var(--spacing-md, 1.5rem) 0;
+		color: var(--text-secondary);
+		flex: 1;
+	}
+
+	.learning-path-card__meta {
+		margin-bottom: var(--spacing-md, 1.5rem);
+		color: var(--text-secondary);
+		font-size: 0.875rem;
+	}
+
+	.learning-path-card__button {
+		display: inline-block;
+		padding: var(--spacing-sm, 1rem) var(--spacing-md, 1.5rem);
+		background: var(--color-accent);
+		color: white;
+		text-decoration: none;
+		border-radius: var(--border-radius-sm, 8px);
+		font-weight: 600;
+		text-align: center;
+		transition: background-color var(--transition-normal);
+	}
+
+	.learning-path-card__button:hover {
+		background: var(--color-accent-hover);
+	}
+
+	/* Hashtags Section */
+	.hashtags-section {
+		background-color: var(--bg-primary);
+		width: 100%;
+	}
+
+	.hashtags-section__title {
+		margin: 0 0 var(--spacing-xl, 3rem) 0;
+		color: var(--text-primary);
+	}
+
+	.hashtags-cloud {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--spacing-sm, 1rem);
+		justify-content: center;
+		align-items: center;
+	}
+
+	/* News Section */
+	.news-section {
+		background-color: var(--bg-secondary);
+		width: 100%;
+	}
+
+	/* Resources Section */
+	.resources-section {
+		background-color: var(--bg-primary);
+		width: 100%;
+	}
+
+	.resources-section__title {
+		margin: 0 0 var(--spacing-2xl, 4rem) 0;
+		color: var(--text-primary);
+	}
+
+	.resources-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+		gap: var(--spacing-lg, 2rem);
+	}
+
+	.resource-card {
+		background: var(--tile-background);
+		border-radius: var(--border-radius, 12px);
+		padding: var(--spacing-xl, 3rem);
+		text-align: center;
+		border: 1px solid var(--color-border);
+		transition: all var(--transition-normal);
+		box-shadow: var(--shadow-sm);
+	}
+
+	.resource-card:hover {
+		transform: translateY(-4px);
+		box-shadow: var(--shadow-hover);
+	}
+
+	.resource-card__icon {
+		margin-bottom: var(--spacing-md, 1.5rem);
+		color: var(--color-accent);
+		display: flex;
+		justify-content: center;
+	}
+
+	.resource-card__title {
+		margin: 0 0 var(--spacing-sm, 1rem) 0;
+		color: var(--text-primary);
+		font-size: 1.125rem;
+	}
+
+	.resource-card__description {
+		margin: 0;
+		color: var(--text-secondary);
+	}
+
+	/* Mobile Responsive */
+	@media (max-width: 768px) {
+		.hero-intro {
+			margin-bottom: var(--spacing-lg, 2rem);
+			padding: 0 var(--spacing-xs, 0.5rem);
+		}
+
+		.hero-intro__subtitle {
+			font-size: 1rem;
+			padding: 0 var(--spacing-sm, 1rem);
+		}
+
+		.learning-paths-grid {
+			grid-template-columns: 1fr;
+			gap: var(--spacing-md, 1.5rem);
+		}
+
+		.learning-path-card {
+			padding: var(--spacing-lg, 2rem);
+			margin: 0 var(--spacing-xs, 0.5rem);
+		}
+
+		.resources-grid {
+			grid-template-columns: 1fr;
+			gap: var(--spacing-md, 1.5rem);
+		}
+
+		.resource-card {
+			padding: var(--spacing-lg, 2rem);
+			margin: 0 var(--spacing-xs, 0.5rem);
+		}
+
+		.hashtags-cloud {
+			gap: var(--spacing-xs, 0.5rem);
+		}
+	}
+
+	@media (min-width: 769px) and (max-width: 1024px) {
+		.learning-paths-grid {
+			grid-template-columns: repeat(2, 1fr);
+		}
+
+		.resources-grid {
+			grid-template-columns: repeat(2, 1fr);
+		}
+	}
+</style>

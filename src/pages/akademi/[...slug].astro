@@ -1,0 +1,470 @@
+---
+import { getCollection, render } from 'astro:content';
+import BaseHead from '../../components/BaseHead.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import SubdomainBadge from '../../components/news/SubdomainBadge.astro';
+import HashtagBadge from '../../components/news/HashtagBadge.astro';
+import FormattedDate from '../../components/FormattedDate.astro';
+import { generateSEOTitle, generateSEODescription } from '../../utils.js';
+
+export async function getStaticPaths() {
+  const akademiEntries = await getCollection('akademi');
+  
+  return akademiEntries.map((entry) => ({
+    params: { slug: entry.id },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+---
+
+<!doctype html>
+<html lang="sv">
+	<head>
+		<BaseHead 
+			title={generateSEOTitle(entry.data.seoTitle || entry.data.title, 'akademi')}
+			description={generateSEODescription(entry.data.seoDescription || entry.data.description, 'akademi')}
+			image={entry.data.socialImage || entry.data.heroImage}
+			type="article"
+			publishedTime={entry.data.pubDate}
+			author={entry.data.author}
+		/>
+	</head>
+	<body>
+		<Header />
+		
+		<main class="article-main">
+			<article class="article">
+				<div class="container">
+					<header class="article-header">
+						<div class="article-badges">
+							<SubdomainBadge subdomain="akademi" />
+							{entry.data.hashtags.slice(0, 3).map(hashtag => (
+								<HashtagBadge hashtag={hashtag} size="small" subdomain="akademi" />
+							))}
+						</div>
+						
+						<h1 class="article-title typography-hero">
+							{entry.data.title}
+						</h1>
+						
+						<p class="article-description typography-body">
+							{entry.data.description}
+						</p>
+						
+						<div class="article-meta">
+							<div class="article-meta__primary">
+								<FormattedDate date={entry.data.pubDate} />
+								{entry.data.readingTime && (
+									<span class="article-meta__reading-time">
+										{entry.data.readingTime} min läsning
+									</span>
+								)}
+								{entry.data.difficulty && (
+									<span class="article-meta__difficulty">
+										Nivå: {entry.data.difficulty}
+									</span>
+								)}
+								{entry.data.duration && (
+									<span class="article-meta__duration">
+										Tid: {entry.data.duration}
+									</span>
+								)}
+							</div>
+							
+							<div class="article-meta__author">
+								av {entry.data.author}
+							</div>
+						</div>
+
+						{entry.data.courseType && (
+							<div class="course-info">
+								<span class="course-type">Typ: {entry.data.courseType}</span>
+							</div>
+						)}
+					</header>
+
+					<div class="article-image">
+						<img 
+							src={entry.data.heroImage} 
+							alt={entry.data.heroImageAlt}
+							class="article-image__img"
+						/>
+					</div>
+
+					{entry.data.learningObjectives && entry.data.learningObjectives.length > 0 && (
+						<aside class="learning-objectives">
+							<h3 class="objectives__title">Vad du kommer att lära dig</h3>
+							<ul class="objectives__list">
+								{entry.data.learningObjectives.map(objective => (
+									<li class="objectives__item">{objective}</li>
+								))}
+							</ul>
+						</aside>
+					)}
+
+					{entry.data.prerequisites && entry.data.prerequisites.length > 0 && (
+						<aside class="prerequisites">
+							<h3 class="prerequisites__title">Förkunskaper</h3>
+							<ul class="prerequisites__list">
+								{entry.data.prerequisites.map(prerequisite => (
+									<li class="prerequisites__item">{prerequisite}</li>
+								))}
+							</ul>
+						</aside>
+					)}
+
+					<div class="article-content">
+						<Content />
+					</div>
+
+					{entry.data.resources && entry.data.resources.length > 0 && (
+						<aside class="course-resources">
+							<h3 class="resources__title">Resurser</h3>
+							<ul class="resources__list">
+								{entry.data.resources.map(resource => (
+									<li class="resources__item">
+										<a 
+											href={resource.url} 
+											target="_blank" 
+											rel="noopener noreferrer"
+											class="resources__link"
+										>
+											<span class="resources__type">[{resource.type}]</span>
+											{resource.title}
+										</a>
+									</li>
+								))}
+							</ul>
+						</aside>
+					)}
+
+					{entry.data.sources && entry.data.sources.length > 0 && (
+						<aside class="article-sources">
+							<h3 class="article-sources__title">Källor</h3>
+							<ul class="article-sources__list">
+								{entry.data.sources.map(source => (
+									<li class="article-sources__item">
+										<a 
+											href={source.url} 
+											target="_blank" 
+											rel="noopener noreferrer"
+											class="article-sources__link"
+										>
+											{source.title}
+										</a>
+										{source.publishedAt && (
+											<time class="article-sources__date">
+												{source.publishedAt.toLocaleDateString('sv-SE')}
+											</time>
+										)}
+									</li>
+								))}
+							</ul>
+						</aside>
+					)}
+				</div>
+			</article>
+		</main>
+		
+		<Footer />
+	</body>
+</html>
+
+<style>
+	.article-main {
+		padding: var(--spacing-xl, 3rem) 0;
+	}
+
+	.article-header {
+		text-align: center;
+		margin-bottom: var(--spacing-2xl, 4rem);
+		max-width: 800px;
+		margin-left: auto;
+		margin-right: auto;
+	}
+
+	.article-badges {
+		display: flex;
+		justify-content: center;
+		gap: 0.5rem;
+		flex-wrap: wrap;
+		margin-bottom: var(--spacing-lg, 2rem);
+	}
+
+	.article-title {
+		margin: var(--spacing-lg, 2rem) 0 var(--spacing-md, 1.5rem) 0;
+		color: var(--color-primary, #000);
+	}
+
+	.article-description {
+		margin: 0 0 var(--spacing-lg, 2rem) 0;
+		color: var(--color-secondary, #86868b);
+		font-size: 1.25rem;
+		line-height: 1.6;
+	}
+
+	.article-meta {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		gap: var(--spacing-lg, 2rem);
+		color: var(--color-secondary, #86868b);
+		font-size: var(--font-size-small, 0.875rem);
+		margin-bottom: var(--spacing-md, 1.5rem);
+	}
+
+	.article-meta__primary {
+		display: flex;
+		align-items: center;
+		gap: var(--spacing-md, 1.5rem);
+	}
+
+	.article-meta__reading-time::before,
+	.article-meta__difficulty::before,
+	.article-meta__duration::before {
+		content: '•';
+		margin-right: var(--spacing-sm, 1rem);
+	}
+
+	.article-meta__author {
+		font-style: italic;
+	}
+
+	.course-info {
+		display: flex;
+		justify-content: center;
+		gap: var(--spacing-lg, 2rem);
+		color: var(--color-secondary, #86868b);
+		font-size: var(--font-size-small, 0.875rem);
+	}
+
+	.article-image {
+		margin-bottom: var(--spacing-2xl, 4rem);
+		border-radius: var(--border-radius-lg, 16px);
+		overflow: hidden;
+	}
+
+	.article-image__img {
+		width: 100%;
+		height: auto;
+		display: block;
+	}
+
+	.learning-objectives,
+	.prerequisites {
+		max-width: 700px;
+		margin: 0 auto var(--spacing-xl, 3rem) auto;
+		padding: var(--spacing-lg, 2rem);
+		border-radius: var(--border-radius, 12px);
+		border: 1px solid rgba(0, 0, 0, 0.06);
+	}
+
+	.learning-objectives {
+		background: #f0f9ff;
+		border-color: #0ea5e9;
+	}
+
+	.prerequisites {
+		background: #fef3c7;
+		border-color: #f59e0b;
+	}
+
+	.objectives__title,
+	.prerequisites__title {
+		font-size: var(--font-size-h3, 1.5rem);
+		font-weight: var(--font-weight-medium, 500);
+		margin: 0 0 var(--spacing-md, 1.5rem) 0;
+		color: var(--color-primary, #000);
+	}
+
+	.objectives__list,
+	.prerequisites__list {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+	}
+
+	.objectives__item,
+	.prerequisites__item {
+		margin-bottom: var(--spacing-sm, 1rem);
+		padding-left: 1.5rem;
+		position: relative;
+	}
+
+	.objectives__item::before {
+		content: '🎯';
+		position: absolute;
+		left: 0;
+	}
+
+	.prerequisites__item::before {
+		content: '📋';
+		position: absolute;
+		left: 0;
+	}
+
+	.article-content {
+		max-width: 700px;
+		margin: 0 auto var(--spacing-2xl, 4rem) auto;
+		font-size: 1.125rem;
+		line-height: 1.7;
+		color: var(--color-primary, #000);
+	}
+
+	.course-resources {
+		max-width: 700px;
+		margin: 0 auto var(--spacing-xl, 3rem) auto;
+		padding: var(--spacing-lg, 2rem);
+		background: #f0fdf4;
+		border-radius: var(--border-radius, 12px);
+		border: 1px solid #10b981;
+	}
+
+	.resources__title {
+		font-size: var(--font-size-h3, 1.5rem);
+		font-weight: var(--font-weight-medium, 500);
+		margin: 0 0 var(--spacing-md, 1.5rem) 0;
+		color: var(--color-primary, #000);
+	}
+
+	.resources__list {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+	}
+
+	.resources__item {
+		margin-bottom: var(--spacing-sm, 1rem);
+	}
+
+	.resources__link {
+		color: var(--color-accent, #0071e3);
+		text-decoration: none;
+		transition: color var(--transition-fast, 0.15s ease);
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+	}
+
+	.resources__link:hover {
+		color: #005bb5;
+	}
+
+	.resources__type {
+		background: #10b981;
+		color: white;
+		padding: 0.125rem 0.5rem;
+		border-radius: 0.25rem;
+		font-size: 0.75rem;
+		font-weight: 600;
+		text-transform: uppercase;
+	}
+
+	.article-sources {
+		max-width: 700px;
+		margin: 0 auto var(--spacing-xl, 3rem) auto;
+		padding: var(--spacing-lg, 2rem);
+		background: var(--color-surface, #fbfbfd);
+		border-radius: var(--border-radius, 12px);
+		border: 1px solid rgba(0, 0, 0, 0.06);
+	}
+
+	.article-sources__title {
+		font-size: var(--font-size-h3, 1.5rem);
+		font-weight: var(--font-weight-medium, 500);
+		margin: 0 0 var(--spacing-md, 1.5rem) 0;
+		color: var(--color-primary, #000);
+	}
+
+	.article-sources__list {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+	}
+
+	.article-sources__item {
+		margin-bottom: var(--spacing-sm, 1rem);
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+	}
+
+	.article-sources__link {
+		color: var(--color-accent, #0071e3);
+		text-decoration: none;
+		transition: color var(--transition-fast, 0.15s ease);
+	}
+
+	.article-sources__link:hover {
+		color: #005bb5;
+	}
+
+	.article-sources__date {
+		color: var(--color-secondary, #86868b);
+		font-size: var(--font-size-small, 0.875rem);
+	}
+
+	/* Mobile Responsive */
+	@media (max-width: 768px) {
+		.article-main {
+			padding: var(--spacing-lg, 2rem) 0;
+		}
+
+		.article-header {
+			margin-bottom: var(--spacing-xl, 3rem);
+		}
+
+		.article-title {
+			font-size: var(--font-size-h1, 2.5rem);
+		}
+
+		.article-description {
+			font-size: 1.125rem;
+		}
+
+		.article-meta,
+		.course-info {
+			flex-direction: column;
+			gap: var(--spacing-sm, 1rem);
+		}
+
+		.article-content {
+			font-size: 1rem;
+		}
+
+		.learning-objectives,
+		.prerequisites,
+		.course-resources,
+		.article-sources {
+			padding: var(--spacing-md, 1.5rem);
+		}
+
+		.article-sources__item {
+			flex-direction: column;
+			align-items: flex-start;
+			gap: 0.25rem;
+		}
+
+		.resources__link {
+			flex-direction: column;
+			align-items: flex-start;
+		}
+	}
+
+	@media (max-width: 480px) {
+		.article-meta__primary {
+			flex-direction: column;
+			gap: var(--spacing-xs, 0.5rem);
+		}
+
+		.article-meta__reading-time::before,
+		.article-meta__difficulty::before,
+		.article-meta__duration::before {
+			display: none;
+		}
+	}
+</style>

@@ -1,0 +1,250 @@
+---
+import BaseHead from '../../components/BaseHead.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import HeroArticle from '../../components/news/HeroArticle.astro';
+import NewsGrid from '../../components/news/NewsGrid.astro';
+import NotificationBanner from '../../components/NotificationBanner.astro';
+import { SITE_TITLE, SITE_DESCRIPTION, HASHTAG_CATEGORIES, type HashtagKey } from '../../consts';
+import { getCollection } from 'astro:content';
+
+export async function getStaticPaths() {
+  return [
+    { params: { category: 'ai-nyheter' } },
+    { params: { category: 'teknik' } },
+    { params: { category: 'analys' } },
+    { params: { category: 'trender' } },
+    { params: { category: 'foretag' } },
+  ];
+}
+
+const { category } = Astro.params;
+
+// Get all news articles for this category
+const allNews = await getCollection('news', (entry) => {
+  return entry.data.category === category;
+});
+
+const sortedNews = allNews.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+
+// Get hero article for this category with smart logic:
+// 1. If there's a hero article from today in this category, use it
+// 2. If there's any hero article in this category, use the most recent one
+// 3. Otherwise, use the most recent article from this category
+const today = new Date();
+const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+
+const todaysHero = sortedNews.find(article =>
+  article.data.featured &&
+  article.data.pubDate >= todayStart
+);
+
+const anyHero = sortedNews.find(article => article.data.featured);
+
+const featuredArticle = todaysHero || anyHero || sortedNews[0];
+
+// Get latest articles for grid (excluding featured)
+const latestArticles = sortedNews
+  .filter(article => article.id !== featuredArticle?.id)
+  .slice(0, 8)
+  .map(article => ({
+    title: article.data.title,
+    description: article.data.description,
+    heroImage: article.data.heroImage,
+    heroImageAlt: article.data.heroImageAlt,
+    category: article.data.category,
+    pubDate: article.data.pubDate,
+    slug: article.id,
+    readingTime: article.data.readingTime,
+    hashtags: article.data.hashtags || [],
+  }));
+
+// Prepare featured article data
+const heroArticleData = featuredArticle ? {
+  title: featuredArticle.data.title,
+  description: featuredArticle.data.description,
+  heroImage: featuredArticle.data.heroImage,
+  heroImageAlt: featuredArticle.data.heroImageAlt,
+  category: featuredArticle.data.category,
+  pubDate: featuredArticle.data.pubDate,
+  slug: featuredArticle.id,
+  readingTime: featuredArticle.data.readingTime,
+  author: featuredArticle.data.author,
+  hashtags: featuredArticle.data.hashtags || [],
+} : null;
+
+// Get category info
+const categoryInfo = HASHTAG_CATEGORIES[category as HashtagKey] || {
+  name: category.toUpperCase(),
+  description: `Senaste nyheterna inom ${category}`
+};
+
+const pageTitle = `${categoryInfo.name} - ${SITE_TITLE}`;
+const pageDescription = categoryInfo.description;
+---
+
+<!doctype html>
+<html lang="sv">
+	<head>
+		<BaseHead title={pageTitle} description={pageDescription} />
+		<link rel="stylesheet" href="/src/styles/apple-newsroom.css" />
+	</head>
+	<body>
+		<Header />
+		
+		<main class="main-content">
+			<!-- Hero Section -->
+			{heroArticleData && (
+				<section class="hero-section section--hero section--full-width scroll-animate">
+					<div class="container">
+						<div class="hero-intro scroll-animate">
+							<h1 class="hero-intro__title typography-hero">{categoryInfo.name}</h1>
+							<p class="hero-intro__subtitle typography-body">
+								{categoryInfo.description}
+							</p>
+						</div>
+						<HeroArticle article={heroArticleData} />
+					</div>
+				</section>
+			)}
+
+			<!-- Latest News Grid -->
+			{latestArticles.length > 0 && (
+				<section class="news-section section section--full-width scroll-animate">
+					<div id="news-grid-container">
+						<NewsGrid
+							articles={latestArticles}
+							title={`Senaste artiklarna inom ${categoryInfo.name.toLowerCase()}`}
+							columns="two"
+						/>
+					</div>
+				</section>
+			)}
+
+			<!-- Back to all categories -->
+			<section class="back-section section section--full-width">
+				<div class="container">
+					<div class="back-link-container">
+						<a href="/" class="back-link">
+							<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+								<path d="m15 18-6-6 6-6"/>
+							</svg>
+							Tillbaka till alla kategorier
+						</a>
+					</div>
+				</div>
+			</section>
+
+		</main>
+		
+		<Footer />
+		
+		<!-- Apple-style Notification Banner -->
+		<NotificationBanner />
+
+		<!-- Enhanced Scripts with Animations -->
+		<script>
+			import { initScrollAnimations, initProgressiveImages } from '../../utils.js';
+			
+			document.addEventListener('DOMContentLoaded', () => {
+				// Initialize scroll animations and progressive loading
+				initScrollAnimations();
+				initProgressiveImages();
+			});
+		</script>
+	</body>
+</html>
+
+<style>
+	/* Main Content Container */
+	.main-content {
+		width: 100%;
+		min-height: 100vh;
+		display: flex;
+		flex-direction: column;
+	}
+
+	/* Hero Section */
+	.hero-section {
+		background-color: var(--bg-primary);
+		width: 100%;
+		position: relative;
+	}
+
+	.hero-intro {
+		text-align: center;
+		margin-bottom: var(--spacing-2xl, 4rem);
+	}
+
+	.hero-intro__title {
+		margin: 0 0 var(--spacing-md, 1.5rem) 0;
+		color: var(--text-primary);
+	}
+
+	.hero-intro__subtitle {
+		margin: 0;
+		color: var(--text-secondary);
+		font-size: 1.125rem;
+		max-width: 600px;
+		margin-left: auto;
+		margin-right: auto;
+	}
+
+	/* News Section */
+	.news-section {
+		background-color: var(--bg-primary);
+		width: 100%;
+		position: relative;
+	}
+
+	/* Back Section */
+	.back-section {
+		background-color: var(--bg-primary);
+		width: 100%;
+		position: relative;
+		padding-top: 0;
+	}
+
+	.back-link-container {
+		text-align: center;
+		padding: var(--spacing-lg, 2rem) 0;
+	}
+
+	.back-link {
+		display: inline-flex;
+		align-items: center;
+		gap: var(--spacing-xs, 0.5rem);
+		text-decoration: none;
+		color: var(--color-accent);
+		font-weight: 500;
+		transition: all var(--transition-normal);
+		padding: var(--spacing-sm, 1rem) var(--spacing-md, 1.5rem);
+		border: 1px solid var(--color-border);
+		border-radius: var(--border-radius, 12px);
+		background: var(--tile-background);
+	}
+
+	.back-link:hover {
+		transform: translateY(-2px);
+		box-shadow: var(--shadow-hover);
+		background: var(--color-tertiary);
+	}
+
+	/* Enhanced Mobile Responsive */
+	@media (max-width: 480px) {
+		.hero-intro {
+			margin-bottom: var(--spacing-lg, 2rem);
+			padding: 0 var(--spacing-xs, 0.5rem);
+		}
+
+		.hero-intro__subtitle {
+			font-size: 1rem;
+			padding: 0 var(--spacing-sm, 1rem);
+		}
+
+		.back-link {
+			padding: var(--spacing-sm, 1rem);
+			font-size: 0.9rem;
+		}
+	}
+</style>

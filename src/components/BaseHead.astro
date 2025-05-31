@@ -29,6 +29,21 @@ const fullTitle = title === SITE_TITLE ? title : `${title} | ${SITE_TITLE}`;
 const fullImageUrl = image.startsWith('http') ? image : new URL(image, SITE_URL);
 ---
 
+<!-- Theme initialization script - must run before any CSS -->
+<script is:inline>
+  (function() {
+    function getThemePreference() {
+      if (typeof localStorage !== 'undefined' && localStorage.getItem('theme')) {
+        return localStorage.getItem('theme');
+      }
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+    
+    const theme = getThemePreference();
+    document.documentElement.setAttribute('data-theme', theme);
+  })();
+</script>
+
 <!-- Global Metadata -->
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
@@ -51,7 +66,7 @@ const fullImageUrl = image.startsWith('http') ? image : new URL(image, SITE_URL)
 <meta name="title" content={fullTitle} />
 <meta name="description" content={description} />
 <meta name="keywords" content="AI, artificiell intelligens, AI-nyheter, teknik, Sverige, maskininlärning, deep learning" />
-<meta name="robots" content="index, follow" />
+<meta name="robots" content="noindex" />
 <meta name="language" content="Swedish" />
 <meta name="author" content={author || 'idag.ai Redaktion'} />
 

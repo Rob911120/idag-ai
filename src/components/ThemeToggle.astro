@@ -95,10 +95,6 @@
     document.documentElement.setAttribute('data-theme', theme);
   }
 
-  // Initialize theme immediately
-  const initialTheme = getThemePreference();
-  setTheme(initialTheme);
-
   document.addEventListener('DOMContentLoaded', () => {
     const themeToggle = document.getElementById('theme-toggle');
     

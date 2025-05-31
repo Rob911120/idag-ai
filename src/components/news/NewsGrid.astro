@@ -1,6 +1,5 @@
 ---
 import NewsCard from './NewsCard.astro';
-import type { CategoryKey } from '../../consts';
 
 export interface Props {
   articles: Array<{
@@ -8,7 +7,7 @@ export interface Props {
     description: string;
     heroImage: string;
     heroImageAlt: string;
-    category: CategoryKey;
+    hashtags: string[];
     pubDate: Date;
     slug: string;
     readingTime?: number;

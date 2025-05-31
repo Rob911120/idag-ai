@@ -1,0 +1,347 @@
+---
+import { getCollection, render } from 'astro:content';
+import BaseHead from '../../components/BaseHead.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import SubdomainBadge from '../../components/news/SubdomainBadge.astro';
+import HashtagBadge from '../../components/news/HashtagBadge.astro';
+import FormattedDate from '../../components/FormattedDate.astro';
+import { generateSEOTitle, generateSEODescription } from '../../utils.js';
+
+export async function getStaticPaths() {
+  const [nyhetarEntries, newsEntries] = await Promise.all([
+    getCollection('nyheter'),
+    getCollection('news')
+  ]);
+  
+  const allEntries = [
+    ...nyhetarEntries,
+    ...newsEntries.filter(entry => entry.data.subdomain === 'nyheter')
+  ];
+
+  return allEntries.map((entry) => ({
+    params: { slug: entry.id },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+---
+
+<!doctype html>
+<html lang="sv">
+	<head>
+		<BaseHead
+			title={generateSEOTitle(entry.data.seoTitle || entry.data.title, 'nyheter')}
+			description={generateSEODescription(entry.data.seoDescription || entry.data.description, 'nyheter')}
+			image={entry.data.socialImage || entry.data.heroImage}
+			type="article"
+			publishedTime={entry.data.pubDate}
+			author={entry.data.author}
+		/>
+	</head>
+	<body>
+		<Header />
+		
+		<main class="article-main">
+			<article class="article">
+				<div class="container">
+					<header class="article-header">
+						<div class="article-badges">
+							<SubdomainBadge subdomain="nyheter" />
+							{entry.data.hashtags.slice(0, 3).map(hashtag => (
+								<HashtagBadge hashtag={hashtag} size="small" subdomain="nyheter" />
+							))}
+						</div>
+						
+						<h1 class="article-title typography-hero">
+							{entry.data.title}
+						</h1>
+						
+						<p class="article-description typography-body">
+							{entry.data.description}
+						</p>
+						
+						<div class="article-meta">
+							<div class="article-meta__primary">
+								<FormattedDate date={entry.data.pubDate} />
+								{entry.data.readingTime && (
+									<span class="article-meta__reading-time">
+										{entry.data.readingTime} min läsning
+									</span>
+								)}
+							</div>
+							
+							<div class="article-meta__author">
+								av {entry.data.author}
+							</div>
+						</div>
+					</header>
+
+					<div class="article-image">
+						<img
+							src={entry.data.heroImage}
+							alt={entry.data.heroImageAlt}
+							class="article-image__img"
+						/>
+					</div>
+
+					<div class="article-content">
+						<Content />
+					</div>
+
+					{entry.data.sources && entry.data.sources.length > 0 && (
+						<aside class="article-sources">
+							<h3 class="article-sources__title">Källor</h3>
+							<ul class="article-sources__list">
+								{entry.data.sources.map(source => (
+									<li class="article-sources__item">
+										<a
+											href={source.url}
+											target="_blank"
+											rel="noopener noreferrer"
+											class="article-sources__link"
+										>
+											{source.title}
+										</a>
+										{source.publishedAt && (
+											<time class="article-sources__date">
+												{source.publishedAt.toLocaleDateString('sv-SE')}
+											</time>
+										)}
+									</li>
+								))}
+							</ul>
+						</aside>
+					)}
+				</div>
+			</article>
+		</main>
+		
+		<Footer />
+	</body>
+</html>
+
+<style>
+	.article-main {
+		padding: var(--spacing-xl, 3rem) 0;
+	}
+
+	.article-header {
+		text-align: center;
+		margin-bottom: var(--spacing-2xl, 4rem);
+		max-width: 800px;
+		margin-left: auto;
+		margin-right: auto;
+	}
+
+	.article-badges {
+		display: flex;
+		justify-content: center;
+		gap: 0.5rem;
+		flex-wrap: wrap;
+		margin-bottom: var(--spacing-lg, 2rem);
+	}
+
+	.article-title {
+		margin: var(--spacing-lg, 2rem) 0 var(--spacing-md, 1.5rem) 0;
+		color: var(--color-primary, #000);
+	}
+
+	.article-description {
+		margin: 0 0 var(--spacing-lg, 2rem) 0;
+		color: var(--color-secondary, #86868b);
+		font-size: 1.25rem;
+		line-height: 1.6;
+	}
+
+	.article-meta {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		gap: var(--spacing-lg, 2rem);
+		color: var(--color-secondary, #86868b);
+		font-size: var(--font-size-small, 0.875rem);
+	}
+
+	.article-meta__primary {
+		display: flex;
+		align-items: center;
+		gap: var(--spacing-md, 1.5rem);
+	}
+
+	.article-meta__reading-time::before {
+		content: '•';
+		margin-right: var(--spacing-sm, 1rem);
+	}
+
+	.article-meta__author {
+		font-style: italic;
+	}
+
+	.article-image {
+		margin-bottom: var(--spacing-2xl, 4rem);
+		border-radius: var(--border-radius-lg, 16px);
+		overflow: hidden;
+	}
+
+	.article-image__img {
+		width: 100%;
+		height: auto;
+		display: block;
+	}
+
+	.article-content {
+		max-width: 700px;
+		margin: 0 auto var(--spacing-2xl, 4rem) auto;
+		font-size: 1.125rem;
+		line-height: 1.7;
+		color: var(--color-primary, #000);
+	}
+
+	.article-content :global(h2) {
+		font-size: var(--font-size-h2, 2rem);
+		font-weight: var(--font-weight-semibold, 600);
+		margin: var(--spacing-2xl, 4rem) 0 var(--spacing-lg, 2rem) 0;
+		color: var(--color-primary, #000);
+	}
+
+	.article-content :global(h3) {
+		font-size: var(--font-size-h3, 1.5rem);
+		font-weight: var(--font-weight-medium, 500);
+		margin: var(--spacing-xl, 3rem) 0 var(--spacing-md, 1.5rem) 0;
+		color: var(--color-primary, #000);
+	}
+
+	.article-content :global(p) {
+		margin-bottom: var(--spacing-lg, 2rem);
+	}
+
+	.article-content :global(ul),
+	.article-content :global(ol) {
+		margin-bottom: var(--spacing-lg, 2rem);
+		padding-left: var(--spacing-lg, 2rem);
+	}
+
+	.article-content :global(li) {
+		margin-bottom: var(--spacing-sm, 1rem);
+	}
+
+	.article-content :global(blockquote) {
+		border-left: 4px solid var(--color-accent, #0071e3);
+		padding-left: var(--spacing-lg, 2rem);
+		margin: var(--spacing-xl, 3rem) 0;
+		font-style: italic;
+		font-size: 1.25rem;
+		color: var(--color-secondary, #86868b);
+	}
+
+	.article-content :global(strong) {
+		font-weight: var(--font-weight-semibold, 600);
+	}
+
+	.article-content :global(a) {
+		color: var(--color-accent, #0071e3);
+		text-decoration: none;
+		border-bottom: 1px solid transparent;
+		transition: border-color var(--transition-fast, 0.15s ease);
+	}
+
+	.article-content :global(a:hover) {
+		border-bottom-color: var(--color-accent, #0071e3);
+	}
+
+	.article-sources {
+		max-width: 700px;
+		margin: 0 auto var(--spacing-xl, 3rem) auto;
+		padding: var(--spacing-lg, 2rem);
+		background: var(--color-surface, #fbfbfd);
+		border-radius: var(--border-radius, 12px);
+		border: 1px solid rgba(0, 0, 0, 0.06);
+	}
+
+	.article-sources__title {
+		font-size: var(--font-size-h3, 1.5rem);
+		font-weight: var(--font-weight-medium, 500);
+		margin: 0 0 var(--spacing-md, 1.5rem) 0;
+		color: var(--color-primary, #000);
+	}
+
+	.article-sources__list {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+	}
+
+	.article-sources__item {
+		margin-bottom: var(--spacing-sm, 1rem);
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+	}
+
+	.article-sources__link {
+		color: var(--color-accent, #0071e3);
+		text-decoration: none;
+		transition: color var(--transition-fast, 0.15s ease);
+	}
+
+	.article-sources__link:hover {
+		color: #005bb5;
+	}
+
+	.article-sources__date {
+		color: var(--color-secondary, #86868b);
+		font-size: var(--font-size-small, 0.875rem);
+	}
+
+	/* Mobile Responsive */
+	@media (max-width: 768px) {
+		.article-main {
+			padding: var(--spacing-lg, 2rem) 0;
+		}
+
+		.article-header {
+			margin-bottom: var(--spacing-xl, 3rem);
+		}
+
+		.article-title {
+			font-size: var(--font-size-h1, 2.5rem);
+		}
+
+		.article-description {
+			font-size: 1.125rem;
+		}
+
+		.article-meta {
+			flex-direction: column;
+			gap: var(--spacing-sm, 1rem);
+		}
+
+		.article-content {
+			font-size: 1rem;
+		}
+
+		.article-sources {
+			padding: var(--spacing-md, 1.5rem);
+		}
+
+		.article-sources__item {
+			flex-direction: column;
+			align-items: flex-start;
+			gap: 0.25rem;
+		}
+	}
+
+	@media (max-width: 480px) {
+		.article-meta__primary {
+			flex-direction: column;
+			gap: var(--spacing-xs, 0.5rem);
+		}
+
+		.article-meta__reading-time::before {
+			display: none;
+		}
+	}
+</style>

@@ -1,0 +1,449 @@
+---
+import BaseHead from '../../components/BaseHead.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import HeroArticle from '../../components/news/HeroArticle.astro';
+import NewsGrid from '../../components/news/NewsGrid.astro';
+import HashtagBadge from '../../components/news/HashtagBadge.astro';
+import NotificationBanner from '../../components/NotificationBanner.astro';
+import { SITE_TITLE, SITE_DESCRIPTION } from '../../consts';
+import { getCollection } from 'astro:content';
+
+// Get all content from modeller collection
+const modellerContent = await getCollection('modeller');
+
+// Sort by date and priority
+const sortedContent = modellerContent.sort((a, b) => {
+  // First sort by priority (higher priority first)
+  if (a.data.priority !== b.data.priority) {
+    return (b.data.priority || 5) - (a.data.priority || 5);
+  }
+  // Then by date
+  return b.data.pubDate.valueOf() - a.data.pubDate.valueOf();
+});
+
+// Get featured/hero article
+const featuredArticle = sortedContent.find(article => article.data.featured) || sortedContent[0];
+
+// Get latest articles for grid (excluding hero)
+const latestArticles = sortedContent
+  .filter(article => article.id !== featuredArticle?.id)
+  .slice(0, 8)
+  .map(article => ({
+    title: article.data.title,
+    description: article.data.description,
+    heroImage: article.data.heroImage,
+    heroImageAlt: article.data.heroImageAlt,
+    pubDate: article.data.pubDate,
+    slug: article.id,
+    readingTime: article.data.readingTime,
+    hashtags: article.data.hashtags || [],
+    subdomain: 'modeller',
+  }));
+
+// Prepare hero article data
+const heroArticleData = featuredArticle ? {
+  title: featuredArticle.data.title,
+  description: featuredArticle.data.description,
+  heroImage: featuredArticle.data.heroImage,
+  heroImageAlt: featuredArticle.data.heroImageAlt,
+  pubDate: featuredArticle.data.pubDate,
+  slug: featuredArticle.id,
+  readingTime: featuredArticle.data.readingTime,
+  author: featuredArticle.data.author,
+  hashtags: featuredArticle.data.hashtags || [],
+  subdomain: 'modeller',
+} : null;
+
+// Extract popular hashtags from modeller content
+const allHashtags = modellerContent.flatMap(article => article.data.hashtags || []);
+const hashtagCounts = allHashtags.reduce((acc, tag) => {
+  acc[tag] = (acc[tag] || 0) + 1;
+  return acc;
+}, {} as Record<string, number>);
+
+const popularHashtags = Object.entries(hashtagCounts)
+  .sort(([,a], [,b]) => b - a)
+  .slice(0, 10)
+  .map(([tag]) => tag);
+
+// Model categories for quick navigation
+const modelCategories = [
+  {
+    name: 'Språkmodeller',
+    description: 'ChatGPT, Claude, Gemini och andra LLM:er',
+    icon: 'chat',
+    filter: 'llm'
+  },
+  {
+    name: 'Bildgenerering',
+    description: 'DALL-E, Midjourney, Stable Diffusion',
+    icon: 'image',
+    filter: 'image'
+  },
+  {
+    name: 'Ljudmodeller',
+    description: 'Röstsyntes, musikgenerering och ljudeffekter',
+    icon: 'audio',
+    filter: 'audio'
+  },
+  {
+    name: 'Videogenerering',
+    description: 'Sora, Runway och andra videomodeller',
+    icon: 'video',
+    filter: 'video'
+  }
+];
+
+// SEO data
+const pageTitle = "AI-Modeller - Guider och recensioner av AI-modeller | idag.ai";
+const pageDescription = "Utforska de senaste AI-modellerna. Djupgående guider, jämförelser och recensioner av ChatGPT, Claude, Gemini, DALL-E och andra AI-modeller.";
+---
+
+<!doctype html>
+<html lang="sv">
+	<head>
+		<BaseHead title={pageTitle} description={pageDescription} />
+		<link rel="stylesheet" href="/src/styles/apple-newsroom.css" />
+		<link rel="canonical" href="https://idag.ai/modeller/" />
+		<meta property="og:type" content="website" />
+		<meta property="og:title" content={pageTitle} />
+		<meta property="og:description" content={pageDescription} />
+		<meta property="og:url" content="https://idag.ai/modeller/" />
+		<meta name="twitter:card" content="summary_large_image" />
+		<meta name="twitter:title" content={pageTitle} />
+		<meta name="twitter:description" content={pageDescription} />
+		<link rel="alternate" type="application/rss+xml" title="idag.ai AI-Modeller RSS" href="/modeller/rss.xml" />
+	</head>
+	<body>
+		<Header />
+		
+		<main class="main-content">
+			<!-- Hero Section -->
+			<section class="hero-section section--hero section--full-width scroll-animate">
+				<div class="container">
+					<div class="hero-intro scroll-animate">
+						<h1 class="hero-intro__title typography-hero">AI-Modeller</h1>
+						<p class="hero-intro__subtitle typography-body">
+							Utforska de senaste AI-modellerna. Djupgående guider, jämförelser och 
+							recensioner av ChatGPT, Claude, Gemini, DALL-E och andra banbrytande AI-modeller.
+						</p>
+					</div>
+					
+					{heroArticleData && (
+						<HeroArticle article={heroArticleData} />
+					)}
+				</div>
+			</section>
+
+			<!-- Model Categories -->
+			<section class="categories-section section scroll-animate">
+				<div class="container">
+					<h2 class="categories-section__title typography-headline text-center">
+						Utforska modellkategorier
+					</h2>
+					<div class="model-categories-grid">
+						{modelCategories.map(category => (
+							<div class="model-category-card">
+								<div class="model-category-card__icon">
+									{category.icon === 'chat' && (
+										<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+											<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+										</svg>
+									)}
+									{category.icon === 'image' && (
+										<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+											<rect width="18" height="18" x="3" y="3" rx="2" ry="2"/>
+											<circle cx="9" cy="9" r="2"/>
+											<path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>
+										</svg>
+									)}
+									{category.icon === 'audio' && (
+										<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+											<polygon points="11 5,6 9,2 9,2 15,6 15,11 19,11 5"/>
+											<path d="m19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>
+										</svg>
+									)}
+									{category.icon === 'video' && (
+										<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+											<polygon points="23 7,16 12,23 17,23 7"/>
+											<rect width="15" height="14" x="1" y="5" rx="2" ry="2"/>
+										</svg>
+									)}
+								</div>
+								<h3 class="model-category-card__title typography-title">{category.name}</h3>
+								<p class="model-category-card__description typography-body">
+									{category.description}
+								</p>
+								<a href={`/modeller?filter=${category.filter}`} class="model-category-card__link">
+									Utforska →
+								</a>
+							</div>
+						))}
+					</div>
+				</div>
+			</section>
+
+			<!-- Popular Hashtags -->
+			{popularHashtags.length > 0 && (
+				<section class="hashtags-section section scroll-animate">
+					<div class="container">
+						<h2 class="hashtags-section__title typography-headline text-center">
+							Populära modeller och tekniker
+						</h2>
+						<div class="hashtags-cloud">
+							{popularHashtags.map(hashtag => (
+								<HashtagBadge hashtag={hashtag} size="normal" />
+							))}
+						</div>
+					</div>
+				</section>
+			)}
+
+			<!-- Latest Models Grid -->
+			{latestArticles.length > 0 && (
+				<section class="news-section section section--full-width scroll-animate">
+					<div class="container">
+						<NewsGrid
+							articles={latestArticles}
+							title="Senaste modellguiderna"
+							columns="three"
+						/>
+					</div>
+				</section>
+			)}
+
+			<!-- Featured Comparison -->
+			<section class="comparison-section section scroll-animate">
+				<div class="container">
+					<div class="comparison-card">
+						<h2 class="comparison-card__title typography-headline">
+							Jämför AI-modeller
+						</h2>
+						<p class="comparison-card__description typography-body">
+							Hitta rätt AI-modell för dina behov. Jämför funktioner, priser och prestanda.
+						</p>
+						<a href="/modeller/jamforelse" class="comparison-card__button">
+							Visa jämförelse
+						</a>
+					</div>
+				</div>
+			</section>
+
+		</main>
+		
+		<Footer />
+		
+		<NotificationBanner />
+
+		<!-- Enhanced Scripts -->
+		<script>
+			import { initScrollAnimations, initProgressiveImages } from '../../utils.js';
+			
+			document.addEventListener('DOMContentLoaded', () => {
+				initScrollAnimations();
+				initProgressiveImages();
+			});
+		</script>
+	</body>
+</html>
+
+<style>
+	/* Main Content Container */
+	.main-content {
+		width: 100%;
+		min-height: 100vh;
+		display: flex;
+		flex-direction: column;
+	}
+
+	/* Hero Section */
+	.hero-section {
+		background-color: var(--bg-primary);
+		width: 100%;
+		position: relative;
+	}
+
+	.hero-intro {
+		text-align: center;
+		margin-bottom: var(--spacing-2xl, 4rem);
+	}
+
+	.hero-intro__title {
+		margin: 0 0 var(--spacing-md, 1.5rem) 0;
+		color: var(--text-primary);
+	}
+
+	.hero-intro__subtitle {
+		margin: 0;
+		color: var(--text-secondary);
+		font-size: 1.125rem;
+		max-width: 700px;
+		margin-left: auto;
+		margin-right: auto;
+	}
+
+	/* Model Categories Section */
+	.categories-section {
+		background-color: var(--bg-secondary);
+		width: 100%;
+	}
+
+	.categories-section__title {
+		margin: 0 0 var(--spacing-2xl, 4rem) 0;
+		color: var(--text-primary);
+	}
+
+	.model-categories-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+		gap: var(--spacing-lg, 2rem);
+	}
+
+	.model-category-card {
+		background: var(--tile-background);
+		border-radius: var(--border-radius, 12px);
+		padding: var(--spacing-xl, 3rem) var(--spacing-lg, 2rem);
+		text-align: center;
+		border: 1px solid var(--color-border);
+		transition: all var(--transition-normal);
+		box-shadow: var(--shadow-sm);
+		position: relative;
+	}
+
+	.model-category-card:hover {
+		transform: translateY(-4px);
+		box-shadow: var(--shadow-hover);
+	}
+
+	.model-category-card__icon {
+		margin-bottom: var(--spacing-md, 1.5rem);
+		color: var(--color-accent);
+	}
+
+	.model-category-card__title {
+		margin: 0 0 var(--spacing-sm, 1rem) 0;
+		color: var(--text-primary);
+	}
+
+	.model-category-card__description {
+		margin: 0 0 var(--spacing-md, 1.5rem) 0;
+		color: var(--text-secondary);
+	}
+
+	.model-category-card__link {
+		color: var(--color-accent);
+		text-decoration: none;
+		font-weight: 600;
+		transition: color var(--transition-normal);
+	}
+
+	.model-category-card__link:hover {
+		color: var(--color-accent-hover);
+	}
+
+	/* Hashtags Section */
+	.hashtags-section {
+		background-color: var(--bg-primary);
+		width: 100%;
+	}
+
+	.hashtags-section__title {
+		margin: 0 0 var(--spacing-xl, 3rem) 0;
+		color: var(--text-primary);
+	}
+
+	.hashtags-cloud {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--spacing-sm, 1rem);
+		justify-content: center;
+		align-items: center;
+	}
+
+	/* News Section */
+	.news-section {
+		background-color: var(--bg-secondary);
+		width: 100%;
+	}
+
+	/* Comparison Section */
+	.comparison-section {
+		background-color: var(--bg-primary);
+		width: 100%;
+	}
+
+	.comparison-card {
+		background: linear-gradient(135deg, var(--color-accent) 0%, var(--color-accent-hover) 100%);
+		border-radius: var(--border-radius, 12px);
+		padding: var(--spacing-2xl, 4rem);
+		text-align: center;
+		color: white;
+		max-width: 600px;
+		margin: 0 auto;
+	}
+
+	.comparison-card__title {
+		margin: 0 0 var(--spacing-md, 1.5rem) 0;
+		color: white;
+	}
+
+	.comparison-card__description {
+		margin: 0 0 var(--spacing-xl, 3rem) 0;
+		color: rgba(255, 255, 255, 0.9);
+	}
+
+	.comparison-card__button {
+		display: inline-block;
+		padding: var(--spacing-sm, 1rem) var(--spacing-lg, 2rem);
+		background: white;
+		color: var(--color-accent);
+		text-decoration: none;
+		border-radius: var(--border-radius-sm, 8px);
+		font-weight: 600;
+		transition: all var(--transition-normal);
+	}
+
+	.comparison-card__button:hover {
+		transform: translateY(-2px);
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+	}
+
+	/* Mobile Responsive */
+	@media (max-width: 768px) {
+		.hero-intro {
+			margin-bottom: var(--spacing-lg, 2rem);
+			padding: 0 var(--spacing-xs, 0.5rem);
+		}
+
+		.hero-intro__subtitle {
+			font-size: 1rem;
+			padding: 0 var(--spacing-sm, 1rem);
+		}
+
+		.model-categories-grid {
+			grid-template-columns: 1fr;
+			gap: var(--spacing-md, 1.5rem);
+		}
+
+		.model-category-card {
+			padding: var(--spacing-lg, 2rem) var(--spacing-md, 1.5rem);
+			margin: 0 var(--spacing-xs, 0.5rem);
+		}
+
+		.comparison-card {
+			padding: var(--spacing-xl, 3rem) var(--spacing-lg, 2rem);
+			margin: 0 var(--spacing-sm, 1rem);
+		}
+
+		.hashtags-cloud {
+			gap: var(--spacing-xs, 0.5rem);
+		}
+	}
+
+	@media (min-width: 769px) and (max-width: 1024px) {
+		.model-categories-grid {
+			grid-template-columns: repeat(2, 1fr);
+		}
+	}
+</style>

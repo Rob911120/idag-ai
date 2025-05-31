@@ -4,10 +4,7 @@ description: "Googles AI-modell Gemini introducerar nya funktioner för kodgener
 pubDate: 2024-01-12
 heroImage: "/blog-placeholder-2.jpg"
 heroImageAlt: "Google Gemini AI-interface med kodexempel"
-category: "teknik"
-tags: ["Google", "Gemini", "kodgenerering", "programutveckling"]
-hashtags: ["senaste", "modeller", "verktyg"]
-featured: false
+hashtags: ["verktyg", "guider"]
 readingTime: 3
 author: "idag.ai Redaktion"
 ---

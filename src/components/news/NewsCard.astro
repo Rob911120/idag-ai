@@ -1,8 +1,8 @@
 ---
 import { Image } from 'astro:assets';
-import CategoryBadge from './CategoryBadge.astro';
+import HashtagBadge from './HashtagBadge.astro';
+import SubdomainBadge from './SubdomainBadge.astro';
 import FormattedDate from '../FormattedDate.astro';
-import type { CategoryKey } from '../../consts';
 
 export interface Props {
   article: {
@@ -10,19 +10,34 @@ export interface Props {
     description: string;
     heroImage: string;
     heroImageAlt: string;
-    category: CategoryKey;
+    hashtags: string[];
     pubDate: Date;
     slug: string;
     readingTime?: number;
+    subdomain?: 'nyheter' | 'modeller' | 'verktyg' | 'akademi';
+    collection?: string;
   };
 }
 
 const { article } = Astro.props;
+
+// Determine the correct URL path based on subdomain or collection
+const getArticleUrl = () => {
+  if (article.subdomain) {
+    return `/${article.subdomain}/${article.slug}`;
+  }
+  if (article.collection === 'news') {
+    return `/artikel/${article.slug}`;
+  }
+  return `/artikel/${article.slug}`;
+};
+
+const articleUrl = getArticleUrl();
 ---
 
 <article class="news-card">
   <div class="news-card__image-container">
-    <a href={`/artikel/${article.slug}`} aria-label={`Läs artikel: ${article.title}`}>
+    <a href={articleUrl} aria-label={`Läs artikel: ${article.title}`}>
       <Image
         src={article.heroImage}
         alt={article.heroImageAlt}
@@ -36,10 +51,19 @@ const { article } = Astro.props;
   </div>
   
   <div class="news-card__content">
-    <CategoryBadge category={article.category} size="small" />
+    <div class="news-card__badges">
+      {article.subdomain && (
+        <SubdomainBadge subdomain={article.subdomain} size="small" />
+      )}
+      <div class="news-card__hashtags">
+        {article.hashtags.slice(0, 2).map(hashtag => (
+          <HashtagBadge hashtag={hashtag} size="small" subdomain={article.subdomain} />
+        ))}
+      </div>
+    </div>
     
     <h2 class="news-card__title typography-title">
-      <a href={`/artikel/${article.slug}`} class="news-card__link">
+      <a href={articleUrl} class="news-card__link">
         {article.title}
       </a>
     </h2>
@@ -105,6 +129,19 @@ const { article } = Astro.props;
     flex-direction: column;
     gap: var(--spacing-sm);
     flex: 1;
+  }
+
+  .news-card__badges {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .news-card__hashtags {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
   }
 
   .news-card__title {

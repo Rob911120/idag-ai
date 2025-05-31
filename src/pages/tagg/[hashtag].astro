@@ -1,0 +1,215 @@
+---
+import { getCollection } from 'astro:content';
+import BaseHead from '../../components/BaseHead.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import NewsCard from '../../components/news/NewsCard.astro';
+import HashtagBadge from '../../components/news/HashtagBadge.astro';
+import { filterContentByHashtag, aggregateHashtags } from '../../utils.js';
+
+export async function getStaticPaths() {
+  const [news, nyheter, modeller, verktyg, akademi] = await Promise.all([
+    getCollection('news'),
+    getCollection('nyheter'),
+    getCollection('modeller'),
+    getCollection('verktyg'),
+    getCollection('akademi')
+  ]);
+
+  const collections = { news, nyheter, modeller, verktyg, akademi };
+  const hashtags = aggregateHashtags(collections);
+
+  return hashtags.map((hashtagData) => ({
+    params: { hashtag: hashtagData.hashtag },
+    props: { 
+      hashtag: hashtagData.hashtag,
+      hashtagData,
+      collections 
+    },
+  }));
+}
+
+const { hashtag, hashtagData, collections } = Astro.props;
+const articles = filterContentByHashtag(collections, hashtag);
+
+const pageTitle = `#${hashtag}`;
+const pageDescription = `Alla artiklar taggade med #${hashtag}. ${hashtagData.count} artiklar från ${hashtagData.subdomains.length} olika områden.`;
+---
+
+<!doctype html>
+<html lang="sv">
+	<head>
+		<BaseHead 
+			title={`${pageTitle} | idag.ai`}
+			description={pageDescription}
+		/>
+	</head>
+	<body>
+		<Header />
+		
+		<main class="hashtag-main">
+			<div class="container">
+				<header class="hashtag-header">
+					<HashtagBadge hashtag={hashtag} size="normal" />
+					
+					<h1 class="hashtag-title typography-hero">
+						#{hashtag}
+					</h1>
+					
+					<p class="hashtag-description typography-body">
+						{hashtagData.count} artiklar från {hashtagData.subdomains.length} olika områden
+					</p>
+
+					{hashtagData.subdomains.length > 1 && (
+						<div class="hashtag-subdomains">
+							<span class="subdomains-label">Finns inom:</span>
+							{hashtagData.subdomains.map(subdomain => (
+								<a href={`/${subdomain}`} class="subdomain-link">
+									{subdomain}
+								</a>
+							))}
+						</div>
+					)}
+				</header>
+
+				{articles.length > 0 ? (
+					<section class="hashtag-content">
+						<div class="articles-grid">
+							{articles.map(article => (
+								<NewsCard 
+									article={{
+										...article.data,
+										slug: article.id,
+										collection: article.collection
+									}} 
+								/>
+							))}
+						</div>
+					</section>
+				) : (
+					<div class="no-articles">
+						<p>Inga artiklar hittades för denna hashtag.</p>
+					</div>
+				)}
+			</div>
+		</main>
+		
+		<Footer />
+	</body>
+</html>
+
+<style>
+	.hashtag-main {
+		padding: var(--spacing-xl, 3rem) 0;
+		min-height: 60vh;
+	}
+
+	.hashtag-header {
+		text-align: center;
+		margin-bottom: var(--spacing-2xl, 4rem);
+		max-width: 800px;
+		margin-left: auto;
+		margin-right: auto;
+	}
+
+	.hashtag-title {
+		margin: var(--spacing-lg, 2rem) 0 var(--spacing-md, 1.5rem) 0;
+		color: var(--color-primary, #000);
+	}
+
+	.hashtag-description {
+		margin: 0 0 var(--spacing-lg, 2rem) 0;
+		color: var(--color-secondary, #86868b);
+		font-size: 1.25rem;
+		line-height: 1.6;
+	}
+
+	.hashtag-subdomains {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		gap: var(--spacing-md, 1.5rem);
+		flex-wrap: wrap;
+	}
+
+	.subdomains-label {
+		color: var(--color-secondary, #86868b);
+		font-weight: 500;
+	}
+
+	.subdomain-link {
+		display: inline-block;
+		padding: 0.25rem 0.75rem;
+		background: var(--color-surface, #fbfbfd);
+		color: var(--color-primary, #000);
+		text-decoration: none;
+		border-radius: 1rem;
+		font-size: 0.875rem;
+		font-weight: 500;
+		border: 1px solid rgba(0, 0, 0, 0.1);
+		transition: all var(--transition-normal);
+		text-transform: capitalize;
+	}
+
+	.subdomain-link:hover {
+		background: var(--color-accent, #0071e3);
+		color: white;
+		transform: translateY(-1px);
+	}
+
+	.hashtag-content {
+		margin-bottom: var(--spacing-2xl, 4rem);
+	}
+
+	.articles-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+		gap: var(--spacing-xl, 3rem);
+		margin-bottom: var(--spacing-2xl, 4rem);
+	}
+
+	.no-articles {
+		text-align: center;
+		padding: var(--spacing-2xl, 4rem);
+		color: var(--color-secondary, #86868b);
+	}
+
+	/* Mobile Responsive */
+	@media (max-width: 768px) {
+		.hashtag-main {
+			padding: var(--spacing-lg, 2rem) 0;
+		}
+
+		.hashtag-header {
+			margin-bottom: var(--spacing-xl, 3rem);
+		}
+
+		.hashtag-title {
+			font-size: var(--font-size-h1, 2.5rem);
+		}
+
+		.hashtag-description {
+			font-size: 1.125rem;
+		}
+
+		.hashtag-subdomains {
+			flex-direction: column;
+			gap: var(--spacing-sm, 1rem);
+		}
+
+		.articles-grid {
+			grid-template-columns: 1fr;
+			gap: var(--spacing-lg, 2rem);
+		}
+	}
+
+	@media (max-width: 480px) {
+		.hashtag-subdomains {
+			align-items: stretch;
+		}
+
+		.subdomain-link {
+			text-align: center;
+		}
+	}
+</style>

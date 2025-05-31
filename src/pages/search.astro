@@ -1,0 +1,281 @@
+---
+import { getCollection } from 'astro:content';
+import Layout from '../layouts/BlogPost.astro';
+import NewsCard from '../components/news/NewsCard.astro';
+
+// Get search query from URL parameters
+const url = new URL(Astro.request.url);
+const query = url.searchParams.get('q') || '';
+
+// Get all content from different collections
+const nyheter = await getCollection('nyheter');
+const modeller = await getCollection('modeller');
+const verktyg = await getCollection('verktyg');
+const akademi = await getCollection('akademi');
+
+// Combine all content
+const allContent = [
+  ...nyheter.map(item => ({ ...item, section: 'nyheter' })),
+  ...modeller.map(item => ({ ...item, section: 'modeller' })),
+  ...verktyg.map(item => ({ ...item, section: 'verktyg' })),
+  ...akademi.map(item => ({ ...item, section: 'akademi' }))
+];
+
+// Filter content based on search query
+const searchResults = query ? allContent.filter(item => {
+  const searchText = `${item.data.title} ${item.data.description || ''} ${item.data.hashtags?.join(' ') || ''}`.toLowerCase();
+  return searchText.includes(query.toLowerCase());
+}) : [];
+
+// Sort by date (newest first)
+searchResults.sort((a, b) => new Date(b.data.pubDate).getTime() - new Date(a.data.pubDate).getTime());
+---
+
+<Layout
+  title={query ? `Sökresultat för "${query}"` : 'Sök'}
+  description={query ? `Sökresultat för "${query}" på idag.ai` : 'Sök över alla AI-nyheter, modeller, verktyg och guider på idag.ai'}
+  pubDate={new Date()}
+  heroImage=""
+>
+  <main class="search-page">
+    <div class="container">
+      <div class="search-header">
+        <h1>
+          {query ? `Sökresultat för "${query}"` : 'Sök'}
+        </h1>
+        
+        <div class="search-box-large">
+          <input 
+            type="search" 
+            placeholder="Sök över alla sektioner..." 
+            class="search-input-large"
+            id="search-input-large"
+            value={query}
+          />
+          <button class="search-button" id="search-button">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"></circle>
+              <path d="m21 21-4.35-4.35"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      {query && (
+        <div class="search-results">
+          <p class="results-count">
+            {searchResults.length} resultat hittades
+          </p>
+          
+          {searchResults.length > 0 ? (
+            <div class="results-grid">
+              {searchResults.map((item) => (
+                <NewsCard
+                  article={{
+                    title: item.data.title,
+                    description: item.data.description || '',
+                    pubDate: item.data.pubDate,
+                    heroImage: item.data.heroImage,
+                    heroImageAlt: item.data.heroImageAlt || item.data.title,
+                    hashtags: item.data.hashtags || [],
+                    slug: item.id,
+                    subdomain: item.section as 'nyheter' | 'modeller' | 'verktyg' | 'akademi',
+                    collection: item.collection
+                  }}
+                />
+              ))}
+            </div>
+          ) : (
+            <div class="no-results">
+              <h3>Inga resultat hittades</h3>
+              <p>Försök med andra sökord eller kontrollera stavningen.</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {!query && (
+        <div class="search-suggestions">
+          <h2>Populära sökningar</h2>
+          <div class="suggestion-tags">
+            <a href="/search?q=ChatGPT" class="suggestion-tag">ChatGPT</a>
+            <a href="/search?q=Claude" class="suggestion-tag">Claude</a>
+            <a href="/search?q=Midjourney" class="suggestion-tag">Midjourney</a>
+            <a href="/search?q=OpenAI" class="suggestion-tag">OpenAI</a>
+            <a href="/search?q=AI-verktyg" class="suggestion-tag">AI-verktyg</a>
+            <a href="/search?q=prompt engineering" class="suggestion-tag">Prompt Engineering</a>
+          </div>
+        </div>
+      )}
+    </div>
+  </main>
+</Layout>
+
+<style>
+  .search-page {
+    padding: 2rem 0;
+  }
+
+  .search-header {
+    text-align: center;
+    margin-bottom: 3rem;
+  }
+
+  .search-header h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 2rem;
+    color: var(--text-primary);
+  }
+
+  .search-box-large {
+    position: relative;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  .search-input-large {
+    width: 100%;
+    padding: 1rem 4rem 1rem 1.5rem;
+    border: 2px solid var(--color-border);
+    border-radius: 50px;
+    font-size: 1.1rem;
+    background: var(--tile-background);
+    color: var(--text-primary);
+    transition: all var(--transition-normal);
+  }
+
+  .search-input-large:focus {
+    outline: none;
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.1);
+  }
+
+  .search-button {
+    position: absolute;
+    right: 0.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--color-accent);
+    border: none;
+    border-radius: 50%;
+    width: 3rem;
+    height: 3rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+  }
+
+  .search-button:hover {
+    background: var(--color-accent-dark);
+    transform: translateY(-50%) scale(1.05);
+  }
+
+  .results-count {
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+    margin-bottom: 2rem;
+  }
+
+  .results-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 2rem;
+  }
+
+  .no-results {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: var(--text-secondary);
+  }
+
+  .no-results h3 {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    color: var(--text-primary);
+  }
+
+  .search-suggestions {
+    text-align: center;
+    margin-top: 3rem;
+  }
+
+  .search-suggestions h2 {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+    color: var(--text-primary);
+  }
+
+  .suggestion-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: center;
+  }
+
+  .suggestion-tag {
+    padding: 0.5rem 1rem;
+    background: var(--tile-background);
+    border: 1px solid var(--color-border);
+    border-radius: 20px;
+    text-decoration: none;
+    color: var(--text-primary);
+    transition: all var(--transition-normal);
+  }
+
+  .suggestion-tag:hover {
+    background: var(--color-accent);
+    color: white;
+    border-color: var(--color-accent);
+  }
+
+  @media (max-width: 768px) {
+    .search-header h1 {
+      font-size: 2rem;
+    }
+
+    .search-input-large {
+      font-size: 1rem;
+      padding: 0.8rem 3.5rem 0.8rem 1.2rem;
+    }
+
+    .search-button {
+      width: 2.5rem;
+      height: 2.5rem;
+    }
+
+    .results-grid {
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
+  }
+</style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const searchInput = document.getElementById('search-input-large') as HTMLInputElement;
+    const searchButton = document.getElementById('search-button') as HTMLButtonElement;
+
+    function performSearch() {
+      const query = searchInput.value.trim();
+      if (query) {
+        window.location.href = `/search?q=${encodeURIComponent(query)}`;
+      }
+    }
+
+    if (searchInput) {
+      searchInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          performSearch();
+        }
+      });
+    }
+
+    if (searchButton) {
+      searchButton.addEventListener('click', performSearch);
+    }
+  });
+</script>

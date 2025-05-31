@@ -1,8 +1,7 @@
 ---
 import { Image } from 'astro:assets';
-import CategoryBadge from './CategoryBadge.astro';
+import HashtagBadge from './HashtagBadge.astro';
 import FormattedDate from '../FormattedDate.astro';
-import type { CategoryKey } from '../../consts';
 
 export interface Props {
   article: {
@@ -10,7 +9,7 @@ export interface Props {
     description: string;
     heroImage: string;
     heroImageAlt: string;
-    category: CategoryKey;
+    hashtags: string[];
     pubDate: Date;
     slug: string;
     readingTime?: number;
@@ -37,8 +36,10 @@ const { article } = Astro.props;
   </div>
   
   <div class="hero-article__content">
-    <div class="hero-article__category">
-      <CategoryBadge category={article.category} />
+    <div class="hero-article__hashtags">
+      {article.hashtags.map(hashtag => (
+        <HashtagBadge hashtag={hashtag} />
+      ))}
     </div>
     
     <h1 class="hero-article__title">

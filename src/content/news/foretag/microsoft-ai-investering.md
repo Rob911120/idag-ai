@@ -4,10 +4,7 @@ description: "Tech-jätten Microsoft tillkännager en historisk investering i sv
 pubDate: 2024-01-10
 heroImage: "/blog-placeholder-3.jpg"
 heroImageAlt: "Microsoft datacenter med svenska flaggan"
-category: "foretag"
-tags: ["Microsoft", "investering", "Sverige", "datacenter", "AI-infrastruktur"]
-hashtags: ["senaste", "guider"]
-featured: false
+hashtags: ["företag", "nyheter"]
 readingTime: 5
 author: "idag.ai Redaktion"
 ---

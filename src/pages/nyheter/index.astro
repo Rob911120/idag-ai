@@ -1,0 +1,469 @@
+---
+import BaseHead from '../../components/BaseHead.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import HeroArticle from '../../components/news/HeroArticle.astro';
+import NewsGrid from '../../components/news/NewsGrid.astro';
+import NotificationBanner from '../../components/NotificationBanner.astro';
+import { SITE_TITLE, SITE_DESCRIPTION } from '../../consts';
+import { getCollection } from 'astro:content';
+
+// Get all content from nyheter and news collections
+const nyhetarContent = await getCollection('nyheter');
+const newsContent = await getCollection('news');
+
+// Combine and sort by date
+const allNewsContent = [...nyhetarContent, ...newsContent]
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+
+// Get featured/hero article
+const featuredArticle = allNewsContent.find(article => article.data.featured) || allNewsContent[0];
+
+// Get latest articles for grid (excluding hero)
+const latestArticles = allNewsContent
+  .filter(article => article.id !== featuredArticle?.id)
+  .slice(0, 8)
+  .map(article => ({
+    title: article.data.title,
+    description: article.data.description,
+    heroImage: article.data.heroImage,
+    heroImageAlt: article.data.heroImageAlt,
+    pubDate: article.data.pubDate,
+    slug: article.id,
+    readingTime: article.data.readingTime,
+    hashtags: article.data.hashtags || [],
+    subdomain: article.data.subdomain || 'nyheter',
+  }));
+
+// Prepare hero article data
+const heroArticleData = featuredArticle ? {
+  title: featuredArticle.data.title,
+  description: featuredArticle.data.description,
+  heroImage: featuredArticle.data.heroImage,
+  heroImageAlt: featuredArticle.data.heroImageAlt,
+  pubDate: featuredArticle.data.pubDate,
+  slug: featuredArticle.id,
+  readingTime: featuredArticle.data.readingTime,
+  author: featuredArticle.data.author,
+  hashtags: featuredArticle.data.hashtags || [],
+  subdomain: featuredArticle.data.subdomain || 'nyheter',
+} : null;
+
+
+// News categories for quick navigation
+const newsCategories = [
+  {
+    name: 'Breaking News',
+    description: 'Senaste nyheterna inom AI-världen',
+    icon: 'breaking',
+    filter: 'breaking'
+  },
+  {
+    name: 'Företagsnyheter',
+    description: 'AI-investeringar och företagsuppdateringar',
+    icon: 'business',
+    filter: 'business'
+  },
+  {
+    name: 'Produktlansering',
+    description: 'Nya AI-produkter och tjänster',
+    icon: 'product',
+    filter: 'product'
+  },
+  {
+    name: 'Forskning',
+    description: 'Vetenskapliga genombrott och studier',
+    icon: 'research',
+    filter: 'research'
+  }
+];
+
+// SEO data
+const pageTitle = "Nyheter - AI-nyheter och senaste utvecklingen | idag.ai";
+const pageDescription = "Håll dig uppdaterad med de senaste nyheterna inom artificiell intelligens. Breaking news, analyser och expertkommentarer om AI-utvecklingen.";
+---
+
+<!doctype html>
+<html lang="sv">
+	<head>
+		<BaseHead title={pageTitle} description={pageDescription} />
+		<link rel="stylesheet" href="/src/styles/apple-newsroom.css" />
+		<link rel="canonical" href="https://idag.ai/nyheter/" />
+		<meta property="og:type" content="website" />
+		<meta property="og:title" content={pageTitle} />
+		<meta property="og:description" content={pageDescription} />
+		<meta property="og:url" content="https://idag.ai/nyheter/" />
+		<meta name="twitter:card" content="summary_large_image" />
+		<meta name="twitter:title" content={pageTitle} />
+		<meta name="twitter:description" content={pageDescription} />
+		<link rel="alternate" type="application/rss+xml" title="idag.ai Nyheter RSS" href="/nyheter/rss.xml" />
+	</head>
+	<body>
+		<Header />
+		
+		<main class="main-content">
+			<!-- Hero Section -->
+			<section class="hero-section section--hero section--full-width scroll-animate">
+				<div class="container">
+					<div class="hero-intro scroll-animate">
+						<h1 class="hero-intro__title typography-hero">AI-Nyheter</h1>
+						<p class="hero-intro__subtitle typography-body">
+							Senaste nyheterna och utvecklingen inom artificiell intelligens. 
+							Håll dig uppdaterad med breaking news, analyser och expertkommentarer.
+						</p>
+					</div>
+					
+					{heroArticleData && (
+						<HeroArticle article={heroArticleData} />
+					)}
+				</div>
+			</section>
+
+			<!-- News Categories -->
+			<section class="categories-section section scroll-animate">
+				<div class="container">
+					<h2 class="categories-section__title typography-headline text-center">
+						Utforska nyhetskategorier
+					</h2>
+					<div class="news-categories-grid">
+						{newsCategories.map(category => (
+							<div class="news-category-card">
+								<div class="news-category-card__icon">
+									{category.icon === 'breaking' && (
+										<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+											<path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/>
+											<path d="M3 6h18"/>
+											<path d="M16 10a4 4 0 0 1-8 0"/>
+										</svg>
+									)}
+									{category.icon === 'business' && (
+										<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+											<path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+											<rect width="20" height="14" x="2" y="6" rx="2"/>
+										</svg>
+									)}
+									{category.icon === 'product' && (
+										<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+											<path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/>
+											<path d="m3.3 7 8.7 5 8.7-5"/>
+											<path d="M12 22V12"/>
+										</svg>
+									)}
+									{category.icon === 'research' && (
+										<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+											<path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-1.36c0-1.1.9-2 2-2h1.5V4.5A2.5 2.5 0 0 1 9.5 2Z"/>
+											<path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-1.36c0-1.1-.9-2-2-2h-1.5V4.5A2.5 2.5 0 0 0 14.5 2Z"/>
+										</svg>
+									)}
+								</div>
+								<h3 class="news-category-card__title typography-title">{category.name}</h3>
+								<p class="news-category-card__description typography-body">
+									{category.description}
+								</p>
+								<a href={`/nyheter?filter=${category.filter}`} class="news-category-card__link">
+									Utforska →
+								</a>
+							</div>
+						))}
+					</div>
+				</div>
+			</section>
+
+
+			<!-- Latest News Grid -->
+			{latestArticles.length > 0 && (
+				<section class="news-section section section--full-width scroll-animate">
+					<div class="container">
+						<NewsGrid
+							articles={latestArticles}
+							title="Senaste nyheterna"
+							columns="three"
+						/>
+					</div>
+				</section>
+			)}
+
+			<!-- Featured News Showcase -->
+			<section class="showcase-section section scroll-animate">
+				<div class="container">
+					<h2 class="showcase-section__title typography-headline text-center">
+						Utvalda nyheter
+					</h2>
+					<div class="news-showcase">
+						<div class="news-showcase-card">
+							<div class="news-showcase-card__badge">Trending</div>
+							<h3 class="news-showcase-card__title">AI-genombrott</h3>
+							<p class="news-showcase-card__description">
+								Följ de senaste genombrotten inom artificiell intelligens
+							</p>
+							<div class="news-showcase-card__features">
+								<span class="feature-tag">Forskning</span>
+								<span class="feature-tag">Innovation</span>
+								<span class="feature-tag">Teknik</span>
+							</div>
+						</div>
+						
+						<div class="news-showcase-card">
+							<div class="news-showcase-card__badge">Hot</div>
+							<h3 class="news-showcase-card__title">Företagsnyheter</h3>
+							<p class="news-showcase-card__description">
+								Investeringar, förvärv och strategiska partnerskap
+							</p>
+							<div class="news-showcase-card__features">
+								<span class="feature-tag">Business</span>
+								<span class="feature-tag">Investeringar</span>
+								<span class="feature-tag">Strategi</span>
+							</div>
+						</div>
+						
+						<div class="news-showcase-card">
+							<div class="news-showcase-card__badge">New</div>
+							<h3 class="news-showcase-card__title">Produktlansering</h3>
+							<p class="news-showcase-card__description">
+								Nya AI-produkter och tjänster som förändrar marknaden
+							</p>
+							<div class="news-showcase-card__features">
+								<span class="feature-tag">Produkter</span>
+								<span class="feature-tag">Lansering</span>
+								<span class="feature-tag">Innovation</span>
+							</div>
+						</div>
+					</div>
+				</div>
+			</section>
+
+
+		</main>
+		
+		<Footer />
+		
+		<NotificationBanner />
+
+		<!-- Enhanced Scripts -->
+		<script>
+			import { initScrollAnimations, initProgressiveImages } from '../../utils.js';
+			
+			document.addEventListener('DOMContentLoaded', () => {
+				initScrollAnimations();
+				initProgressiveImages();
+			});
+		</script>
+	</body>
+</html>
+
+<style>
+	/* Main Content Container */
+	.main-content {
+		width: 100%;
+		min-height: 100vh;
+		display: flex;
+		flex-direction: column;
+	}
+
+	/* Hero Section */
+	.hero-section {
+		background-color: var(--bg-primary);
+		width: 100%;
+		position: relative;
+	}
+
+	.hero-intro {
+		text-align: center;
+		margin-bottom: var(--spacing-2xl, 4rem);
+	}
+
+	.hero-intro__title {
+		margin: 0 0 var(--spacing-md, 1.5rem) 0;
+		color: var(--text-primary);
+	}
+
+	.hero-intro__subtitle {
+		margin: 0;
+		color: var(--text-secondary);
+		font-size: 1.125rem;
+		max-width: 700px;
+		margin-left: auto;
+		margin-right: auto;
+	}
+
+	/* News Categories Section */
+	.categories-section {
+		background-color: var(--bg-secondary);
+		width: 100%;
+	}
+
+	.categories-section__title {
+		margin: 0 0 var(--spacing-2xl, 4rem) 0;
+		color: var(--text-primary);
+	}
+
+	.news-categories-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+		gap: var(--spacing-lg, 2rem);
+	}
+
+	.news-category-card {
+		background: var(--tile-background);
+		border-radius: var(--border-radius, 12px);
+		padding: var(--spacing-xl, 3rem) var(--spacing-lg, 2rem);
+		text-align: center;
+		border: 1px solid var(--color-border);
+		transition: all var(--transition-normal);
+		box-shadow: var(--shadow-sm);
+		position: relative;
+	}
+
+	.news-category-card:hover {
+		transform: translateY(-4px);
+		box-shadow: var(--shadow-hover);
+	}
+
+	.news-category-card__icon {
+		margin-bottom: var(--spacing-md, 1.5rem);
+		color: var(--color-accent);
+	}
+
+	.news-category-card__title {
+		margin: 0 0 var(--spacing-sm, 1rem) 0;
+		color: var(--text-primary);
+	}
+
+	.news-category-card__description {
+		margin: 0 0 var(--spacing-md, 1.5rem) 0;
+		color: var(--text-secondary);
+	}
+
+	.news-category-card__link {
+		color: var(--color-accent);
+		text-decoration: none;
+		font-weight: 600;
+		transition: color var(--transition-normal);
+	}
+
+	.news-category-card__link:hover {
+		color: var(--color-accent-hover);
+	}
+
+
+	/* News Section */
+	.news-section {
+		background-color: var(--bg-secondary);
+		width: 100%;
+	}
+
+	/* Showcase Section */
+	.showcase-section {
+		background-color: var(--bg-primary);
+		width: 100%;
+	}
+
+	.showcase-section__title {
+		margin: 0 0 var(--spacing-2xl, 4rem) 0;
+		color: var(--text-primary);
+	}
+
+	.news-showcase {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+		gap: var(--spacing-lg, 2rem);
+	}
+
+	.news-showcase-card {
+		background: var(--tile-background);
+		border-radius: var(--border-radius, 12px);
+		padding: var(--spacing-xl, 3rem);
+		border: 1px solid var(--color-border);
+		transition: all var(--transition-normal);
+		box-shadow: var(--shadow-sm);
+		position: relative;
+	}
+
+	.news-showcase-card:hover {
+		transform: translateY(-4px);
+		box-shadow: var(--shadow-hover);
+	}
+
+	.news-showcase-card__badge {
+		position: absolute;
+		top: var(--spacing-md, 1.5rem);
+		right: var(--spacing-md, 1.5rem);
+		background: var(--color-accent);
+		color: white;
+		padding: 0.25rem 0.75rem;
+		border-radius: 1rem;
+		font-size: 0.75rem;
+		font-weight: 600;
+		text-transform: uppercase;
+	}
+
+	.news-showcase-card__title {
+		margin: 0 0 var(--spacing-sm, 1rem) 0;
+		color: var(--text-primary);
+	}
+
+	.news-showcase-card__description {
+		margin: 0 0 var(--spacing-md, 1.5rem) 0;
+		color: var(--text-secondary);
+	}
+
+	.news-showcase-card__features {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--spacing-xs, 0.5rem);
+	}
+
+	.feature-tag {
+		background: var(--bg-secondary);
+		color: var(--text-secondary);
+		padding: 0.25rem 0.5rem;
+		border-radius: 0.5rem;
+		font-size: 0.75rem;
+		font-weight: 500;
+	}
+
+
+	/* Mobile Responsive */
+	@media (max-width: 768px) {
+		.hero-intro {
+			margin-bottom: var(--spacing-lg, 2rem);
+			padding: 0 var(--spacing-xs, 0.5rem);
+		}
+
+		.hero-intro__subtitle {
+			font-size: 1rem;
+			padding: 0 var(--spacing-sm, 1rem);
+		}
+
+		.news-categories-grid {
+			grid-template-columns: 1fr;
+			gap: var(--spacing-md, 1.5rem);
+		}
+
+		.news-category-card {
+			padding: var(--spacing-lg, 2rem) var(--spacing-md, 1.5rem);
+			margin: 0 var(--spacing-xs, 0.5rem);
+		}
+
+		.news-showcase {
+			grid-template-columns: 1fr;
+			gap: var(--spacing-md, 1.5rem);
+		}
+
+		.news-showcase-card {
+			padding: var(--spacing-lg, 2rem);
+			margin: 0 var(--spacing-xs, 0.5rem);
+		}
+
+	}
+
+	@media (min-width: 769px) and (max-width: 1024px) {
+		.news-categories-grid {
+			grid-template-columns: repeat(2, 1fr);
+		}
+
+		.news-showcase {
+			grid-template-columns: repeat(2, 1fr);
+		}
+	}
+</style>
