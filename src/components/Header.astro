@@ -1,12 +1,45 @@
 ---
-import { SITE_TITLE, NAV_ITEMS } from '../consts';
+import { SITE_TITLE } from '../consts';
 import ThemeToggle from './ThemeToggle.astro';
+import { getNavigationItems } from '../utils/navigation.js';
+
+// Get navigation items with correct subdomain URLs
+// In Astro, we need to pass the current URL from the request
+const currentUrl = Astro.url.href;
+const NAV_ITEMS = getNavigationItems(currentUrl);
+
+// Build home URL based on current environment
+function getHomeUrl(currentUrl: string): string {
+  const url = new URL(currentUrl);
+  const hostname = url.hostname;
+  
+  if (hostname.includes('workers.dev')) {
+    // For workers.dev, go to main idag-ai worker
+    const parts = hostname.split('.');
+    if (parts.length >= 3) {
+      const workerSuffix = parts.slice(-3).join('.');
+      return `https://idag-ai.${workerSuffix}`;
+    }
+  }
+  
+  if (hostname.includes('idag.ai')) {
+    return 'https://idag.ai';
+  }
+  
+  if (hostname.includes('idag.se')) {
+    return 'https://idag.se';
+  }
+  
+  return 'https://idag.se'; // fallback
+}
+
+const homeUrl = getHomeUrl(currentUrl);
 ---
 
 <header class="site-header">
 	<div class="container">
 		<nav class="site-header__nav">
-			<a href="/" class="site-header__logo">
+			<a href={homeUrl} class="site-header__logo">
 				{SITE_TITLE}
 			</a>
 			
@@ -218,16 +251,31 @@ import ThemeToggle from './ThemeToggle.astro';
 			});
 		}
 
-		// Set active navigation link based on current page
-		const currentPath = window.location.pathname;
+		// Set active navigation link based on current subdomain
 		const navLinks = document.querySelectorAll('.site-header__nav-link');
+		const currentHostname = window.location.hostname;
+		
+		console.log('🎯 Setting active navigation link for hostname:', currentHostname);
 		
 		navLinks.forEach(link => {
 			const href = link.getAttribute('href');
-			if (href && currentPath.startsWith(href) && href !== '/') {
-				link.classList.add('active');
-			} else if (href === '/' && currentPath === '/') {
-				link.classList.add('active');
+			if (href) {
+				try {
+					const linkUrl = new URL(href);
+					const linkHostname = linkUrl.hostname;
+					
+					console.log('  Checking link:', href, 'hostname:', linkHostname);
+					
+					// Check if this link's hostname matches current hostname
+					if (linkHostname === currentHostname) {
+						console.log('  ✅ Active link found:', href);
+						link.classList.add('active');
+					} else {
+						link.classList.remove('active');
+					}
+				} catch (e) {
+					console.log('  ❌ Invalid URL:', href);
+				}
 			}
 		});
 	});
