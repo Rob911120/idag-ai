@@ -8,22 +8,23 @@ export function buildGeoSubdomainUrl(geoSubdomain, currentUrl = '') {
   const url = new URL(currentUrl || 'https://idag.ai');
   const hostname = url.hostname;
   
-  console.log('🔗 Building geo subdomain URL for:', geoSubdomain);
+  console.log('🔗 DEBUG: Building geo subdomain URL for:', geoSubdomain);
   console.log('  Current hostname:', hostname);
+  
+  // FIXED: Always build proper domain URLs for consistent language switching
   
   // Check if we're in workers.dev environment (development)
   if (hostname.includes('workers.dev')) {
-    // For workers.dev, use query parameters for geo switching during development
-    // This allows testing without needing separate worker deployments
-    const baseUrl = `https://${hostname}`;
-    const newUrl = `${baseUrl}?geo=${geoSubdomain}`;
-    console.log('  Workers.dev environment, built URL with geo param:', newUrl);
+    // Build proper workers.dev subdomain URL
+    const defaultWorkerSuffix = 'rob911120.workers.dev';
+    const newUrl = `https://${geoSubdomain}-idag-ai.${defaultWorkerSuffix}`;
+    console.log('  FIXED: Workers.dev environment, built domain URL:', newUrl);
     return newUrl;
   }
   
   // Check if we're in localhost environment (local development)
   if (hostname === 'localhost' || hostname.startsWith('127.0.0.1')) {
-    // For localhost development, use geo query parameter
+    // For localhost development, use geo query parameter as fallback
     const port = url.port || '4321'; // Default Astro dev server port
     const newUrl = `http://localhost:${port}?geo=${geoSubdomain}`;
     console.log('  Localhost environment, built URL:', newUrl);
@@ -48,7 +49,7 @@ export function buildGeoSubdomainUrl(geoSubdomain, currentUrl = '') {
   // This handles both build-time (example.com) and any other unknown hostnames
   const defaultWorkerSuffix = 'rob911120.workers.dev';
   const fallbackUrl = `https://${geoSubdomain}-idag-ai.${defaultWorkerSuffix}`;
-  console.log('  Unknown environment, using workers.dev fallback:', fallbackUrl);
+  console.log('  FIXED: Unknown environment, using workers.dev domain URL:', fallbackUrl);
   return fallbackUrl;
 }
 

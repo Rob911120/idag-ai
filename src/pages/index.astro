@@ -12,18 +12,20 @@ import { getCurrentGeoSubdomain } from '../utils/navigation.js';
 import { getHtmlLang, tGeo } from '../utils/i18n.js';
 
 // DEBUG: Log request details for geo subdomain detection
-console.log('🏠 INDEX PAGE - Request Analysis:');
+console.log('🏠 DEBUG: INDEX PAGE - Request Analysis:');
 console.log('  Request URL:', Astro.request.url);
 console.log('  Astro URL:', Astro.url.href);
 console.log('  Pathname:', Astro.url.pathname);
+console.log('  Hostname:', Astro.url.hostname);
 
 // Detect geo subdomain from request
 const detectedGeoSubdomain = detectSubdomain(Astro.request, Astro.url);
-console.log('🎯 Detected geo subdomain:', detectedGeoSubdomain);
+console.log('🎯 DEBUG: Detected geo subdomain:', detectedGeoSubdomain);
 
 // Get current geo subdomain (fallback to 'se' if none detected)
 const currentGeo = detectedGeoSubdomain || getCurrentGeoSubdomain(Astro.request.url) || 'se';
-console.log('🌍 Current geo:', currentGeo);
+console.log('🌍 DEBUG: Final current geo:', currentGeo);
+console.log('🌍 DEBUG: This will determine language and content filtering');
 
 // Only load collections for the current geo to improve performance
 console.log('📚 Loading collections for geo:', currentGeo);

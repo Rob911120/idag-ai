@@ -3,25 +3,25 @@ export function detectSubdomain(request, astroUrl) {
   const url = astroUrl || new URL(request.url);
   const hostname = url.hostname;
   
-  console.log('🔍 Geo Subdomain Detection Debug:');
+  console.log('🔍 DEBUG: Geo Subdomain Detection:');
   console.log('  Full URL:', url.href);
   console.log('  Hostname:', hostname);
   
   // First check for geo query parameter (works for all environments)
   const geoParam = url.searchParams.get('geo');
   if (geoParam && ['se', 'no'].includes(geoParam)) {
-    console.log('  🎯 Found geo query parameter:', geoParam);
+    console.log('  🎯 DEBUG: Found geo query parameter:', geoParam);
     return geoParam;
   }
   
   // Extract subdomain from hostname
   const parts = hostname.split('.');
-  console.log('  Hostname parts:', parts);
+  console.log('  DEBUG: Hostname parts:', parts);
   
   // Check for Cloudflare Workers subdomain pattern (test environment)
   if (hostname.includes('workers.dev')) {
     const workerSubdomain = parts[0];
-    console.log('  Workers.dev detected, subdomain:', workerSubdomain);
+    console.log('  DEBUG: Workers.dev detected, subdomain:', workerSubdomain);
     
     // Map worker subdomain to geo subdomain
     const subdomainMap = {
@@ -33,10 +33,11 @@ export function detectSubdomain(request, astroUrl) {
     };
     
     const geoSubdomain = subdomainMap[workerSubdomain];
-    console.log('  🎯 WORKER SUBDOMAIN MAPPING:');
+    console.log('  🎯 DEBUG: WORKER SUBDOMAIN MAPPING:');
     console.log('    Input subdomain:', workerSubdomain);
     console.log('    Mapped to geo:', geoSubdomain);
     console.log('    Available mappings:', Object.keys(subdomainMap));
+    console.log('    RESULT: Will return geo subdomain:', geoSubdomain);
     
     return geoSubdomain || null;
   }

@@ -305,22 +305,16 @@ const homeUrl = '/';
 					return;
 				}
 				
-				console.log('🌍 Geo navigation clicked:', targetGeo, targetHref);
+				console.log('🌍 DEBUG: Geo navigation clicked');
+				console.log('  Target geo:', targetGeo);
+				console.log('  Target href:', targetHref);
+				console.log('  Current hostname:', window.location.hostname);
+				console.log('  Current href:', window.location.href);
 				
-				// For localhost and workers.dev development, always use URL parameter method with reload
-				if (window.location.hostname === 'localhost' ||
-				    window.location.hostname.startsWith('127.0.0.1') ||
-				    window.location.hostname.includes('workers.dev')) {
-					// Always use URL parameter method to ensure server-side content filtering
-					const currentUrl = new URL(window.location.href);
-					currentUrl.searchParams.set('geo', targetGeo);
-					console.log('🔄 Redirecting to:', currentUrl.href);
-					window.location.href = currentUrl.href;
-				} else {
-					// In production, use the actual subdomain URL
-					console.log('🔄 Redirecting to:', targetHref);
-					window.location.href = targetHref;
-				}
+				// FIXED: Always navigate to the correct domain URL, never use geo parameters
+				// This ensures proper domain-based language switching
+				console.log('🔄 FIXED: Redirecting to domain URL:', targetHref);
+				window.location.href = targetHref;
 			});
 		});
 
