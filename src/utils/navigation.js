@@ -23,6 +23,16 @@ export function buildSubdomainUrl(subdomain, currentUrl = '') {
     }
   }
   
+  // Check if we're in localhost environment (local development)
+  if (hostname === 'localhost' || hostname.startsWith('127.0.0.1')) {
+    // For localhost, we want to go to workers.dev URLs since that's where the subdomains are deployed
+    // We need to determine the correct worker suffix - let's use a default or detect from environment
+    const defaultWorkerSuffix = 'rob911120.workers.dev'; // You can make this configurable
+    const newUrl = `https://${subdomain}-idag-ai.${defaultWorkerSuffix}`;
+    console.log('  Localhost environment, built URL:', newUrl);
+    return newUrl;
+  }
+  
   // Check if we're in idag.ai environment (production)
   if (hostname.includes('idag.ai')) {
     const newUrl = `https://${subdomain}.idag.ai`;
@@ -37,9 +47,11 @@ export function buildSubdomainUrl(subdomain, currentUrl = '') {
     return newUrl;
   }
   
-  // Fallback to idag.se for unknown environments
-  const fallbackUrl = `https://${subdomain}.idag.se`;
-  console.log('  Unknown environment, using fallback:', fallbackUrl);
+  // For development/unknown environments, default to workers.dev
+  // This handles both build-time (example.com) and any other unknown hostnames
+  const defaultWorkerSuffix = 'rob911120.workers.dev';
+  const fallbackUrl = `https://${subdomain}-idag-ai.${defaultWorkerSuffix}`;
+  console.log('  Unknown environment, using workers.dev fallback:', fallbackUrl);
   return fallbackUrl;
 }
 
