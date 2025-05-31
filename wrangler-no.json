@@ -1,6 +1,6 @@
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "akademi-idag-ai",
+	"name": "no-idag-ai",
 	"compatibility_date": "2025-04-01",
 	"compatibility_flags": [
 		"nodejs_compat"
@@ -13,5 +13,16 @@
 	"observability": {
 		"enabled": true
 	},
-	"upload_source_maps": true
+	"upload_source_maps": true,
+	"routes": [
+		{
+			"pattern": "no.idag.ai/*",
+			"zone_name": "idag.ai"
+		}
+	],
+	"vars": {
+		"GEO_SUBDOMAIN": "no",
+		"SITE_LANGUAGE": "no",
+		"SITE_COUNTRY": "Norge"
+	}
 }

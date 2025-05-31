@@ -8,17 +8,35 @@ const url = new URL(Astro.request.url);
 const query = url.searchParams.get('q') || '';
 
 // Get all content from different collections
-const nyheter = await getCollection('nyheter');
-const modeller = await getCollection('modeller');
-const verktyg = await getCollection('verktyg');
-const akademi = await getCollection('akademi');
+const [nyheter, modeller, verktyg, akademi, seNyheter, seModeller, seVerktyg, seAkademi, noNyheter, noModeller, noVerktyg, noAkademi] = await Promise.all([
+  getCollection('nyheter').catch(() => []),
+  getCollection('modeller').catch(() => []),
+  getCollection('verktyg').catch(() => []),
+  getCollection('akademi').catch(() => []),
+  getCollection('se-nyheter').catch(() => []),
+  getCollection('se-modeller').catch(() => []),
+  getCollection('se-verktyg').catch(() => []),
+  getCollection('se-akademi').catch(() => []),
+  getCollection('no-nyheter').catch(() => []),
+  getCollection('no-modeller').catch(() => []),
+  getCollection('no-verktyg').catch(() => []),
+  getCollection('no-akademi').catch(() => [])
+]);
 
 // Combine all content
 const allContent = [
   ...nyheter.map(item => ({ ...item, section: 'nyheter' })),
   ...modeller.map(item => ({ ...item, section: 'modeller' })),
   ...verktyg.map(item => ({ ...item, section: 'verktyg' })),
-  ...akademi.map(item => ({ ...item, section: 'akademi' }))
+  ...akademi.map(item => ({ ...item, section: 'akademi' })),
+  ...seNyheter.map(item => ({ ...item, section: 'nyheter' })),
+  ...seModeller.map(item => ({ ...item, section: 'modeller' })),
+  ...seVerktyg.map(item => ({ ...item, section: 'verktyg' })),
+  ...seAkademi.map(item => ({ ...item, section: 'akademi' })),
+  ...noNyheter.map(item => ({ ...item, section: 'nyheter' })),
+  ...noModeller.map(item => ({ ...item, section: 'modeller' })),
+  ...noVerktyg.map(item => ({ ...item, section: 'verktyg' })),
+  ...noAkademi.map(item => ({ ...item, section: 'akademi' }))
 ];
 
 // Filter content based on search query

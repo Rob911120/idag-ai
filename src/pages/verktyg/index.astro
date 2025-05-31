@@ -1,16 +1,21 @@
 ---
-import BaseHead from '../../components/BaseHead.astro';
-import Header from '../../components/Header.astro';
-import Footer from '../../components/Footer.astro';
-import HeroArticle from '../../components/news/HeroArticle.astro';
-import NewsGrid from '../../components/news/NewsGrid.astro';
-import HashtagBadge from '../../components/news/HashtagBadge.astro';
-import NotificationBanner from '../../components/NotificationBanner.astro';
-import { SITE_TITLE, SITE_DESCRIPTION } from '../../consts';
+import BaseHead from '@/components/BaseHead.astro';
+import Header from '@/components/Header.astro';
+import Footer from '@/components/Footer.astro';
+import HeroArticle from '@/components/news/HeroArticle.astro';
+import NewsGrid from '@/components/news/NewsGrid.astro';
+import HashtagBadge from '@/components/news/HashtagBadge.astro';
+import NotificationBanner from '@/components/NotificationBanner.astro';
+import { SITE_TITLE, SITE_DESCRIPTION } from '@/consts';
 import { getCollection } from 'astro:content';
 
 // Get all content from verktyg collection
-const verktygContent = await getCollection('verktyg');
+const [seVerktygContent, noVerktygContent] = await Promise.all([
+  getCollection('se-verktyg'),
+  getCollection('no-verktyg')
+]);
+
+const verktygContent = [...seVerktygContent, ...noVerktygContent];
 
 // Sort by date and priority
 const sortedContent = verktygContent.sort((a, b) => {
@@ -295,7 +300,7 @@ const pageDescription = "Upptäck de bästa AI-verktygen för produktivitet, kre
 
 		<!-- Enhanced Scripts -->
 		<script>
-			import { initScrollAnimations, initProgressiveImages } from '../../utils.js';
+			import { initScrollAnimations, initProgressiveImages } from '@/utils.js';
 			
 			document.addEventListener('DOMContentLoaded', () => {
 				initScrollAnimations();

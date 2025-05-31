@@ -1,6 +1,6 @@
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "nyheter",
+	"name": "se-idag-ai",
 	"compatibility_date": "2025-04-01",
 	"compatibility_flags": [
 		"nodejs_compat"
@@ -15,7 +15,14 @@
 	},
 	"upload_source_maps": true,
 	"routes": [
-		"nyheter.idag.ai/*",
-		"www.nyheter.idag.ai/*"
-	]
+		{
+			"pattern": "se.idag.ai/*",
+			"zone_name": "idag.ai"
+		}
+	],
+	"vars": {
+		"GEO_SUBDOMAIN": "se",
+		"SITE_LANGUAGE": "sv",
+		"SITE_COUNTRY": "Sverige"
+	}
 }

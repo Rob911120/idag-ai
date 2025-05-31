@@ -1,16 +1,21 @@
 ---
-import BaseHead from '../../components/BaseHead.astro';
-import Header from '../../components/Header.astro';
-import Footer from '../../components/Footer.astro';
-import HeroArticle from '../../components/news/HeroArticle.astro';
-import NewsGrid from '../../components/news/NewsGrid.astro';
-import HashtagBadge from '../../components/news/HashtagBadge.astro';
-import NotificationBanner from '../../components/NotificationBanner.astro';
-import { SITE_TITLE, SITE_DESCRIPTION } from '../../consts';
+import BaseHead from '@/components/BaseHead.astro';
+import Header from '@/components/Header.astro';
+import Footer from '@/components/Footer.astro';
+import HeroArticle from '@/components/news/HeroArticle.astro';
+import NewsGrid from '@/components/news/NewsGrid.astro';
+import HashtagBadge from '@/components/news/HashtagBadge.astro';
+import NotificationBanner from '@/components/NotificationBanner.astro';
+import { SITE_TITLE, SITE_DESCRIPTION } from '@/consts';
 import { getCollection } from 'astro:content';
 
 // Get all content from akademi collection
-const akademiContent = await getCollection('akademi');
+const [seAkademiContent, noAkademiContent] = await Promise.all([
+  getCollection('se-akademi'),
+  getCollection('no-akademi')
+]);
+
+const akademiContent = [...seAkademiContent, ...noAkademiContent];
 
 // Sort by date and priority
 const sortedContent = akademiContent.sort((a, b) => {
@@ -299,7 +304,7 @@ const pageDescription = "Lär dig artificiell intelligens från grunden. Kurser,
 
 		<!-- Enhanced Scripts -->
 		<script>
-			import { initScrollAnimations, initProgressiveImages } from '../../utils.js';
+			import { initScrollAnimations, initProgressiveImages } from '@/utils.js';
 			
 			document.addEventListener('DOMContentLoaded', () => {
 				initScrollAnimations();

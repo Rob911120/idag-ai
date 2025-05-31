@@ -9,7 +9,7 @@ export interface Props {
 
 const { category, size = 'normal', href } = Astro.props;
 const displayName = HASHTAG_CATEGORIES[category].name;
-const categoryHref = href || `/kategori/${category}`;
+const categoryHref = href || `/tagg/${category}`;
 ---
 
 <a href={categoryHref} class={`category-badge category-badge--${category} ${size === 'small' ? 'category-badge--small' : ''}`}>

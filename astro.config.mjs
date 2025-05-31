@@ -7,11 +7,22 @@ import cloudflare from "@astrojs/cloudflare";
 
 // https://astro.build/config
 export default defineConfig({
-  site: "https://example.com",
+  site: "https://idag.ai",
   integrations: [mdx(), sitemap()],
   adapter: cloudflare({
     platformProxy: {
       enabled: true,
     },
   }),
+  i18n: {
+    defaultLocale: "se",
+    locales: ["se", "no"],
+    routing: {
+      prefixDefaultLocale: false
+    }
+  },
+  // Configure build output for geo-based subdomains
+  build: {
+    format: 'directory'
+  }
 });

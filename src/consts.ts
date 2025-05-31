@@ -3,7 +3,11 @@
 
 export const SITE_TITLE = "idag.ai";
 export const SITE_DESCRIPTION = "Idag, allt om AI. Sveriges största informationskälla inom AI.";
-export const SITE_URL = "https://idag.ai";
+export const SITE_URL = import.meta.env.DEV
+  ? "http://localhost:4321"
+  : import.meta.env.CF_PAGES_URL
+  ? import.meta.env.CF_PAGES_URL
+  : "https://idag.ai";
 
 // Navigation items - links to different sections
 export const NAV_ITEMS = [

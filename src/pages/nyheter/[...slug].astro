@@ -1,22 +1,22 @@
 ---
 import { getCollection, render } from 'astro:content';
-import BaseHead from '../../components/BaseHead.astro';
-import Header from '../../components/Header.astro';
-import Footer from '../../components/Footer.astro';
-import SubdomainBadge from '../../components/news/SubdomainBadge.astro';
-import HashtagBadge from '../../components/news/HashtagBadge.astro';
-import FormattedDate from '../../components/FormattedDate.astro';
-import { generateSEOTitle, generateSEODescription } from '../../utils.js';
+import BaseHead from '@/components/BaseHead.astro';
+import Header from '@/components/Header.astro';
+import Footer from '@/components/Footer.astro';
+import SubdomainBadge from '@/components/news/SubdomainBadge.astro';
+import HashtagBadge from '@/components/news/HashtagBadge.astro';
+import FormattedDate from '@/components/FormattedDate.astro';
+import { generateSEOTitle, generateSEODescription } from '@/utils.js';
 
 export async function getStaticPaths() {
-  const [nyhetarEntries, newsEntries] = await Promise.all([
-    getCollection('nyheter'),
-    getCollection('news')
+  const [seNyhetarEntries, noNyhetarEntries] = await Promise.all([
+    getCollection('se-nyheter').catch(() => []),
+    getCollection('no-nyheter').catch(() => [])
   ]);
   
   const allEntries = [
-    ...nyhetarEntries,
-    ...newsEntries.filter(entry => entry.data.subdomain === 'nyheter')
+    ...seNyhetarEntries,
+    ...noNyhetarEntries
   ];
 
   return allEntries.map((entry) => ({

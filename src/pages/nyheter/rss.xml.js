@@ -3,12 +3,12 @@ import { getCollection } from 'astro:content';
 import { SITE_TITLE, SITE_DESCRIPTION } from '../../consts.js';
 
 export async function GET(context) {
-  // Get all content from nyheter and news collections
-  const nyhetarContent = await getCollection('nyheter');
-  const newsContent = await getCollection('news');
+  // Get all content from geo-based nyheter collections
+  const seNyhetarContent = await getCollection('se-nyheter');
+  const noNyhetarContent = await getCollection('no-nyheter');
   
   // Combine and sort by date
-  const allNewsContent = [...nyhetarContent, ...newsContent]
+  const allNewsContent = [...seNyhetarContent, ...noNyhetarContent]
     .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
 
   return rss({

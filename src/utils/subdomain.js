@@ -1,9 +1,9 @@
-// Subdomain detection and routing utilities
+// Geo-based subdomain detection and routing utilities
 export function detectSubdomain(request) {
   const url = new URL(request.url);
   const hostname = url.hostname;
   
-  console.log('🔍 Subdomain Detection Debug:');
+  console.log('🔍 Geo Subdomain Detection Debug:');
   console.log('  Full URL:', request.url);
   console.log('  Hostname:', hostname);
   
@@ -16,23 +16,19 @@ export function detectSubdomain(request) {
     const workerSubdomain = parts[0];
     console.log('  Workers.dev detected, subdomain:', workerSubdomain);
     
-    // Map worker subdomain to content subdomain
+    // Map worker subdomain to geo subdomain
     const subdomainMap = {
-      'nyheter-idag-ai': 'nyheter',
-      'modeller-idag-ai': 'modeller',
-      'verktyg-idag-ai': 'verktyg',
-      'akademi-idag-ai': 'akademi',
-      // Production mappings (when we change worker names)
-      'nyheter': 'nyheter',
-      'modeller': 'modeller',
-      'verktyg': 'verktyg',
-      'akademi': 'akademi'
+      'se-idag-ai': 'se',
+      'no-idag-ai': 'no',
+      // Direct mappings
+      'se': 'se',
+      'no': 'no'
     };
     
-    const contentSubdomain = subdomainMap[workerSubdomain];
-    console.log('  Mapped to content subdomain:', contentSubdomain);
+    const geoSubdomain = subdomainMap[workerSubdomain];
+    console.log('  Mapped to geo subdomain:', geoSubdomain);
     
-    return contentSubdomain || null;
+    return geoSubdomain || null;
   }
   
   // Check for custom domain subdomain pattern (production environment)
@@ -42,72 +38,127 @@ export function detectSubdomain(request) {
     
     // Handle both www and non-www cases
     if (subdomain === 'www' && parts.length > 2) {
-      // www.nyheter.idag.ai -> nyheter
+      // www.se.idag.ai -> se
       const actualSubdomain = parts[1];
-      if (['nyheter', 'modeller', 'verktyg', 'akademi'].includes(actualSubdomain)) {
+      if (['se', 'no'].includes(actualSubdomain)) {
         return actualSubdomain;
       }
-    } else if (['nyheter', 'modeller', 'verktyg', 'akademi'].includes(subdomain)) {
-      // nyheter.idag.ai -> nyheter
+    } else if (['se', 'no'].includes(subdomain)) {
+      // se.idag.ai -> se, no.idag.ai -> no
       return subdomain;
     }
   }
   
-  console.log('  No valid subdomain detected');
+  console.log('  No valid geo subdomain detected');
   return null;
 }
 
-export function getSubdomainContent(subdomain, collections) {
-  console.log('📚 Getting content for subdomain:', subdomain);
+export function getGeoContent(geoSubdomain, collections) {
+  console.log('📚 Getting content for geo subdomain:', geoSubdomain);
   
-  if (!subdomain) {
-    console.log('  No subdomain provided, returning all content');
+  if (!geoSubdomain) {
+    console.log('  No geo subdomain provided, returning all content');
     return null;
   }
   
-  const { news, nyheter, modeller, verktyg, akademi } = collections;
+  // Get country-specific collections
+  const countryCollections = getCountryCollections(geoSubdomain, collections);
   
-  switch (subdomain) {
+  console.log(`  Found ${Object.keys(countryCollections).length} collection types for ${geoSubdomain}`);
+  return countryCollections;
+}
+
+export function getCountryCollections(country, collections) {
+  const prefix = country === 'se' ? 'se' : 'no';
+  
+  return {
+    nyheter: collections[`${prefix}-nyheter`] || [],
+    modeller: collections[`${prefix}-modeller`] || [],
+    verktyg: collections[`${prefix}-verktyg`] || [],
+    akademi: collections[`${prefix}-akademi`] || []
+  };
+}
+
+export function getCategoryContent(geoSubdomain, category, collections) {
+  console.log('📚 Getting category content:', category, 'for geo:', geoSubdomain);
+  
+  const countryCollections = getCountryCollections(geoSubdomain, collections);
+  
+  switch (category) {
     case 'nyheter':
-      const nyhetarContent = [...(nyheter || []), ...(news || []).filter(item => item.data.subdomain === 'nyheter')];
-      console.log(`  Found ${nyhetarContent.length} nyheter articles`);
+      const nyhetarContent = countryCollections.nyheter || [];
+      console.log(`  Found ${nyhetarContent.length} nyheter articles for ${geoSubdomain}`);
       return nyhetarContent;
       
     case 'modeller':
-      console.log(`  Found ${modeller?.length || 0} modeller articles`);
-      return modeller || [];
+      const modellerContent = countryCollections.modeller || [];
+      console.log(`  Found ${modellerContent.length} modeller articles for ${geoSubdomain}`);
+      return modellerContent;
       
     case 'verktyg':
-      console.log(`  Found ${verktyg?.length || 0} verktyg articles`);
-      return verktyg || [];
+      const verktygContent = countryCollections.verktyg || [];
+      console.log(`  Found ${verktygContent.length} verktyg articles for ${geoSubdomain}`);
+      return verktygContent;
       
     case 'akademi':
-      console.log(`  Found ${akademi?.length || 0} akademi articles`);
-      return akademi || [];
+      const akademiContent = countryCollections.akademi || [];
+      console.log(`  Found ${akademiContent.length} akademi articles for ${geoSubdomain}`);
+      return akademiContent;
       
     default:
-      console.log('  Unknown subdomain, returning null');
+      console.log('  Unknown category, returning null');
       return null;
   }
 }
 
-export function shouldRedirectToSubdomain(subdomain, pathname) {
-  console.log('🔄 Checking redirect for subdomain:', subdomain, 'pathname:', pathname);
+export function shouldRedirectToGeoSubdomain(geoSubdomain, pathname) {
+  console.log('🔄 Checking redirect for geo subdomain:', geoSubdomain, 'pathname:', pathname);
   
-  if (!subdomain) return false;
+  if (!geoSubdomain) return false;
   
-  // Don't redirect if already on correct path
-  if (pathname.startsWith(`/${subdomain}`)) {
-    console.log('  Already on correct path, no redirect needed');
-    return false;
-  }
-  
-  // Don't redirect for root path - show subdomain-specific content instead
+  // Don't redirect for root path - show geo-specific content instead
   if (pathname === '/' || pathname === '') {
-    console.log('  Root path detected, will show subdomain content');
+    console.log('  Root path detected, will show geo content');
     return false;
   }
   
-  console.log('  Redirect needed');
-  return true;
+  // Don't redirect if already on a category path (nyheter, modeller, etc.)
+  const categoryPaths = ['nyheter', 'modeller', 'verktyg', 'akademi'];
+  const pathSegments = pathname.split('/').filter(Boolean);
+  
+  if (pathSegments.length > 0 && categoryPaths.includes(pathSegments[0])) {
+    console.log('  Already on category path, no redirect needed');
+    return false;
+  }
+  
+  console.log('  No redirect needed for geo-based routing');
+  return false;
+}
+
+// Helper function to get language from geo subdomain
+export function getLanguageFromGeo(geoSubdomain) {
+  const languageMap = {
+    'se': 'sv', // Swedish
+    'no': 'no'  // Norwegian
+  };
+  
+  return languageMap[geoSubdomain] || 'sv'; // Default to Swedish
+}
+
+// Helper function to get country name from geo subdomain
+export function getCountryName(geoSubdomain, language = 'sv') {
+  const countryNames = {
+    'se': {
+      'sv': 'Sverige',
+      'no': 'Sverige',
+      'en': 'Sweden'
+    },
+    'no': {
+      'sv': 'Norge',
+      'no': 'Norge',
+      'en': 'Norway'
+    }
+  };
+  
+  return countryNames[geoSubdomain]?.[language] || countryNames[geoSubdomain]?.['sv'] || geoSubdomain;
 }

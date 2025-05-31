@@ -1,24 +1,52 @@
 ---
+import { getCurrentGeoSubdomain } from '../../utils/navigation.js';
+import { getCategoryDisplayNameGeo, getCountryDisplayNameGeo } from '../../utils/i18n.js';
+
 export interface Props {
-  subdomain: 'nyheter' | 'modeller' | 'verktyg' | 'akademi';
+  subdomain?: 'nyheter' | 'modeller' | 'verktyg' | 'akademi';
+  geoSubdomain?: 'se' | 'no';
+  category?: 'nyheter' | 'modeller' | 'verktyg' | 'akademi';
+  type?: 'category' | 'geo';
   size?: 'small' | 'normal';
   href?: string;
 }
 
-const { subdomain, size = 'normal', href } = Astro.props;
+const {
+  subdomain,
+  geoSubdomain,
+  category,
+  type = 'category',
+  size = 'normal',
+  href
+} = Astro.props;
 
-const subdomainLabels = {
-  nyheter: 'Nyheter',
-  modeller: 'Modeller',
-  verktyg: 'Verktyg',
-  akademi: 'Akademi'
-};
+// Determine current geo subdomain if not provided
+const currentGeo = geoSubdomain || getCurrentGeoSubdomain(Astro.request?.url || '');
 
-const subdomainHref = href || `/${subdomain}`;
+// Determine what to display based on type
+let displayText = '';
+let badgeClass = '';
+let badgeHref = href;
+
+if (type === 'geo') {
+  // Show country/geo information
+  displayText = getCountryDisplayNameGeo(currentGeo, currentGeo);
+  badgeClass = `geo-badge--${currentGeo}`;
+  badgeHref = badgeHref || '/';
+} else {
+  // Show category information (default behavior)
+  const categoryToShow = category || subdomain;
+  if (categoryToShow) {
+    displayText = getCategoryDisplayNameGeo(categoryToShow, currentGeo);
+    badgeClass = `category-badge--${categoryToShow}`;
+    badgeHref = badgeHref || `/${categoryToShow}`;
+  }
+}
+
 ---
 
-<a href={subdomainHref} class={`subdomain-badge subdomain-badge--${subdomain} ${size === 'small' ? 'subdomain-badge--small' : ''}`}>
-  {subdomainLabels[subdomain]}
+<a href={badgeHref} class={`subdomain-badge ${badgeClass} ${size === 'small' ? 'subdomain-badge--small' : ''}`}>
+  {displayText}
 </a>
 
 <style>
@@ -47,36 +75,66 @@ const subdomainHref = href || `/${subdomain}`;
     padding: 0.2rem 0.6rem;
   }
 
-  /* Different colors for different subdomains */
-  .subdomain-badge--nyheter {
+  /* Category badge colors */
+  .category-badge--nyheter {
     background: #ef4444;
   }
   
-  .subdomain-badge--nyheter:hover {
+  .category-badge--nyheter:hover {
     background: #dc2626;
   }
 
-  .subdomain-badge--modeller {
+  .category-badge--modeller {
     background: #8b5cf6;
   }
   
-  .subdomain-badge--modeller:hover {
+  .category-badge--modeller:hover {
     background: #7c3aed;
   }
 
-  .subdomain-badge--verktyg {
+  .category-badge--verktyg {
     background: #10b981;
   }
   
-  .subdomain-badge--verktyg:hover {
+  .category-badge--verktyg:hover {
     background: #059669;
   }
 
-  .subdomain-badge--akademi {
+  .category-badge--akademi {
     background: #f59e0b;
   }
   
-  .subdomain-badge--akademi:hover {
+  .category-badge--akademi:hover {
     background: #d97706;
   }
+
+  /* Geo badge colors */
+  .geo-badge--se {
+    background: #0066cc;
+    position: relative;
+  }
+  
+  .geo-badge--se:hover {
+    background: #0052a3;
+  }
+
+  .geo-badge--se::before {
+    content: '🇸🇪';
+    margin-right: 0.5rem;
+  }
+
+  .geo-badge--no {
+    background: #ed1c24;
+    position: relative;
+  }
+  
+  .geo-badge--no:hover {
+    background: #c41e3a;
+  }
+
+  .geo-badge--no::before {
+    content: '🇳🇴';
+    margin-right: 0.5rem;
+  }
+
 </style>

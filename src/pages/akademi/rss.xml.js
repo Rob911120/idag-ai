@@ -3,11 +3,13 @@ import { getCollection } from 'astro:content';
 import { SITE_TITLE, SITE_DESCRIPTION } from '../../consts.js';
 
 export async function GET(context) {
-  // Get all content from akademi collection
-  const akademiContent = await getCollection('akademi');
+  // Get all content from geo-based akademi collections
+  const seAkademiContent = await getCollection('se-akademi');
+  const noAkademiContent = await getCollection('no-akademi');
   
-  // Sort by date
-  const sortedContent = akademiContent
+  // Combine and sort by date
+  const allContent = [...seAkademiContent, ...noAkademiContent];
+  const sortedContent = allContent
     .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
 
   return rss({

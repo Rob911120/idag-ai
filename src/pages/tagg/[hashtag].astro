@@ -1,22 +1,35 @@
 ---
 import { getCollection } from 'astro:content';
-import BaseHead from '../../components/BaseHead.astro';
-import Header from '../../components/Header.astro';
-import Footer from '../../components/Footer.astro';
-import NewsCard from '../../components/news/NewsCard.astro';
-import HashtagBadge from '../../components/news/HashtagBadge.astro';
-import { filterContentByHashtag, aggregateHashtags } from '../../utils.js';
+import BaseHead from '@/components/BaseHead.astro';
+import Header from '@/components/Header.astro';
+import Footer from '@/components/Footer.astro';
+import NewsCard from '@/components/news/NewsCard.astro';
+import HashtagBadge from '@/components/news/HashtagBadge.astro';
+import { filterContentByHashtag, aggregateHashtags } from '@/utils.js';
 
 export async function getStaticPaths() {
-  const [news, nyheter, modeller, verktyg, akademi] = await Promise.all([
-    getCollection('news'),
-    getCollection('nyheter'),
-    getCollection('modeller'),
-    getCollection('verktyg'),
-    getCollection('akademi')
+  const [seNyheter, seModeller, seVerktyg, seAkademi, noNyheter, noModeller, noVerktyg, noAkademi] = await Promise.all([
+    getCollection('se-nyheter'),
+    getCollection('se-modeller'),
+    getCollection('se-verktyg'),
+    getCollection('se-akademi'),
+    getCollection('no-nyheter'),
+    getCollection('no-modeller'),
+    getCollection('no-verktyg'),
+    getCollection('no-akademi')
   ]);
 
-  const collections = { news, nyheter, modeller, verktyg, akademi };
+  const collections = {
+    'se-nyheter': seNyheter,
+    'se-modeller': seModeller,
+    'se-verktyg': seVerktyg,
+    'se-akademi': seAkademi,
+    'no-nyheter': noNyheter,
+    'no-modeller': noModeller,
+    'no-verktyg': noVerktyg,
+    'no-akademi': noAkademi
+  };
+
   const hashtags = aggregateHashtags(collections);
 
   return hashtags.map((hashtagData) => ({
@@ -24,7 +37,7 @@ export async function getStaticPaths() {
     props: { 
       hashtag: hashtagData.hashtag,
       hashtagData,
-      collections 
+      collections
     },
   }));
 }

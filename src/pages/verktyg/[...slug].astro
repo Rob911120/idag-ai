@@ -9,9 +9,17 @@ import FormattedDate from '../../components/FormattedDate.astro';
 import { generateSEOTitle, generateSEODescription } from '../../utils.js';
 
 export async function getStaticPaths() {
-  const verktygEntries = await getCollection('verktyg');
+  const [seVerktygEntries, noVerktygEntries] = await Promise.all([
+    getCollection('se-verktyg').catch(() => []),
+    getCollection('no-verktyg').catch(() => [])
+  ]);
   
-  return verktygEntries.map((entry) => ({
+  const allEntries = [
+    ...seVerktygEntries,
+    ...noVerktygEntries
+  ];
+  
+  return allEntries.map((entry) => ({
     params: { slug: entry.id },
     props: { entry },
   }));

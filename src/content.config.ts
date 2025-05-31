@@ -36,25 +36,17 @@ const contentSchema = z.object({
   tags: z.array(z.string()).default([])
 });
 
-// News collection (existing)
-const newsCollection = defineCollection({
-  loader: glob({ base: "./src/content/news", pattern: "**/*.{md,mdx}" }),
-  schema: contentSchema.extend({
-    subdomain: z.literal('nyheter').default('nyheter')
-  })
-});
-
-// New subdomain collections
-const nyhetarCollection = defineCollection({
-  loader: glob({ base: "./src/content/nyheter", pattern: "**/*.{md,mdx}" }),
+// Country-specific collections for Swedish content
+const seNyhetarCollection = defineCollection({
+  loader: glob({ base: "./src/content/se/se-nyheter", pattern: "**/*.{md,mdx}" }),
   schema: contentSchema.extend({
     subdomain: z.literal('nyheter').default('nyheter'),
     newsType: z.enum(['breaking', 'analysis', 'opinion', 'interview']).optional()
   })
 });
 
-const modellerCollection = defineCollection({
-  loader: glob({ base: "./src/content/modeller", pattern: "**/*.{md,mdx}" }),
+const seModellerCollection = defineCollection({
+  loader: glob({ base: "./src/content/se/se-modeller", pattern: "**/*.{md,mdx}" }),
   schema: contentSchema.extend({
     subdomain: z.literal('modeller').default('modeller'),
     modelType: z.enum(['llm', 'image', 'audio', 'video', 'multimodal']).optional(),
@@ -69,8 +61,8 @@ const modellerCollection = defineCollection({
   })
 });
 
-const verktygCollection = defineCollection({
-  loader: glob({ base: "./src/content/verktyg", pattern: "**/*.{md,mdx}" }),
+const seVerktygCollection = defineCollection({
+  loader: glob({ base: "./src/content/se/se-verktyg", pattern: "**/*.{md,mdx}" }),
   schema: contentSchema.extend({
     subdomain: z.literal('verktyg').default('verktyg'),
     toolType: z.enum(['productivity', 'creative', 'development', 'analysis', 'automation']).optional(),
@@ -85,8 +77,8 @@ const verktygCollection = defineCollection({
   })
 });
 
-const akademiCollection = defineCollection({
-  loader: glob({ base: "./src/content/akademi", pattern: "**/*.{md,mdx}" }),
+const seAkademiCollection = defineCollection({
+  loader: glob({ base: "./src/content/se/se-akademi", pattern: "**/*.{md,mdx}" }),
   schema: contentSchema.extend({
     subdomain: z.literal('akademi').default('akademi'),
     courseType: z.enum(['tutorial', 'guide', 'course', 'workshop']).optional(),
@@ -101,23 +93,73 @@ const akademiCollection = defineCollection({
   })
 });
 
-// Keep the existing blog collection for backward compatibility
-const blog = defineCollection({
-  loader: glob({ base: "./src/content/blog", pattern: "**/*.{md,mdx}" }),
-  schema: z.object({
-    title: z.string(),
-    description: z.string(),
-    pubDate: z.coerce.date(),
-    updatedDate: z.coerce.date().optional(),
-    heroImage: z.string().optional(),
-  }),
+// Country-specific collections for Norwegian content
+const noNyhetarCollection = defineCollection({
+  loader: glob({ base: "./src/content/no/no-nyheter", pattern: "**/*.{md,mdx}" }),
+  schema: contentSchema.extend({
+    subdomain: z.literal('nyheter').default('nyheter'),
+    newsType: z.enum(['breaking', 'analysis', 'opinion', 'interview']).optional()
+  })
 });
 
+const noModellerCollection = defineCollection({
+  loader: glob({ base: "./src/content/no/no-modeller", pattern: "**/*.{md,mdx}" }),
+  schema: contentSchema.extend({
+    subdomain: z.literal('modeller').default('modeller'),
+    modelType: z.enum(['llm', 'image', 'audio', 'video', 'multimodal']).optional(),
+    provider: z.string().optional(),
+    pricing: z.object({
+      free: z.boolean().default(false),
+      paid: z.boolean().default(false),
+      enterprise: z.boolean().default(false)
+    }).optional(),
+    capabilities: z.array(z.string()).default([]),
+    limitations: z.array(z.string()).default([])
+  })
+});
+
+const noVerktygCollection = defineCollection({
+  loader: glob({ base: "./src/content/no/no-verktyg", pattern: "**/*.{md,mdx}" }),
+  schema: contentSchema.extend({
+    subdomain: z.literal('verktyg').default('verktyg'),
+    toolType: z.enum(['productivity', 'creative', 'development', 'analysis', 'automation']).optional(),
+    platform: z.array(z.enum(['web', 'desktop', 'mobile', 'api'])).default(['web']),
+    pricing: z.object({
+      free: z.boolean().default(false),
+      freemium: z.boolean().default(false),
+      paid: z.boolean().default(false)
+    }).optional(),
+    features: z.array(z.string()).default([]),
+    integrations: z.array(z.string()).default([])
+  })
+});
+
+const noAkademiCollection = defineCollection({
+  loader: glob({ base: "./src/content/no/no-akademi", pattern: "**/*.{md,mdx}" }),
+  schema: contentSchema.extend({
+    subdomain: z.literal('akademi').default('akademi'),
+    courseType: z.enum(['tutorial', 'guide', 'course', 'workshop']).optional(),
+    duration: z.string().optional(),
+    prerequisites: z.array(z.string()).default([]),
+    learningObjectives: z.array(z.string()).default([]),
+    resources: z.array(z.object({
+      title: z.string(),
+      url: z.string(),
+      type: z.enum(['video', 'article', 'tool', 'dataset'])
+    })).optional()
+  })
+});
+
+
 export const collections = {
-  news: newsCollection,
-  nyheter: nyhetarCollection,
-  modeller: modellerCollection,
-  verktyg: verktygCollection,
-  akademi: akademiCollection,
-  blog
+  // Swedish collections
+  'se-nyheter': seNyhetarCollection,
+  'se-modeller': seModellerCollection,
+  'se-verktyg': seVerktygCollection,
+  'se-akademi': seAkademiCollection,
+  // Norwegian collections
+  'no-nyheter': noNyhetarCollection,
+  'no-modeller': noModellerCollection,
+  'no-verktyg': noVerktygCollection,
+  'no-akademi': noAkademiCollection
 };

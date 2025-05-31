@@ -1,39 +1,18 @@
 ---
 import { SITE_TITLE } from '../consts';
 import ThemeToggle from './ThemeToggle.astro';
-import { getNavigationItems } from '../utils/navigation.js';
+import { getCategoryNavigationItems, getCurrentGeoSubdomain } from '../utils/navigation-fixed.js';
+import { getGeoNavigationItems } from '../utils/navigation.js';
 
 // Get navigation items with correct subdomain URLs
 // In Astro, we need to pass the current URL from the request
 const currentUrl = Astro.url.href;
-const NAV_ITEMS = getNavigationItems(currentUrl);
+const currentGeo = getCurrentGeoSubdomain(currentUrl);
+const NAV_ITEMS = getCategoryNavigationItems(currentGeo, currentUrl);
+const GEO_ITEMS = getGeoNavigationItems(currentUrl);
 
-// Build home URL based on current environment
-function getHomeUrl(currentUrl: string): string {
-  const url = new URL(currentUrl);
-  const hostname = url.hostname;
-  
-  if (hostname.includes('workers.dev')) {
-    // For workers.dev, go to main idag-ai worker
-    const parts = hostname.split('.');
-    if (parts.length >= 3) {
-      const workerSuffix = parts.slice(-3).join('.');
-      return `https://idag-ai.${workerSuffix}`;
-    }
-  }
-  
-  if (hostname.includes('idag.ai')) {
-    return 'https://idag.ai';
-  }
-  
-  if (hostname.includes('idag.se')) {
-    return 'https://idag.se';
-  }
-  
-  return 'https://idag.se'; // fallback
-}
-
-const homeUrl = getHomeUrl(currentUrl);
+// Use relative path for home URL - works in all environments
+const homeUrl = '/';
 ---
 
 <header class="site-header">
@@ -60,7 +39,7 @@ const homeUrl = getHomeUrl(currentUrl);
 				<div class="search-box">
 					<input
 						type="search"
-						placeholder="Sök över alla sektioner..."
+						placeholder={currentGeo === 'no' ? 'Søk over alle seksjoner...' : 'Sök över alla sektioner...'}
 						class="search-box__input"
 						id="search-input"
 					/>
@@ -68,6 +47,20 @@ const homeUrl = getHomeUrl(currentUrl);
 						<circle cx="11" cy="11" r="8"></circle>
 						<path d="m21 21-4.35-4.35"></path>
 					</svg>
+				</div>
+				
+				<!-- Geo Navigation - moved to be left of theme toggle -->
+				<div class="geo-navigation">
+					{GEO_ITEMS.map(item => (
+						<button
+							class={`geo-nav-button ${item.geoSubdomain === currentGeo ? 'active' : ''}`}
+							title={`Växla till ${item.label}`}
+							data-geo={item.geoSubdomain}
+							data-href={item.href}
+						>
+							{item.flag}
+						</button>
+					))}
 				</div>
 				
 				<ThemeToggle />
@@ -147,6 +140,48 @@ const homeUrl = getHomeUrl(currentUrl);
 		gap: 1.5rem;
 	}
 
+	/* Geo Navigation Styles - matching ThemeToggle */
+	.geo-navigation {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+	}
+
+	.geo-nav-button {
+		position: relative;
+		width: 44px;
+		height: 44px;
+		border: none;
+		border-radius: 50%;
+		background: var(--color-surface);
+		color: var(--color-secondary);
+		cursor: pointer;
+		transition: all var(--transition-fast);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		border: 1px solid var(--color-border);
+		font-size: 20px;
+		line-height: 1;
+	}
+
+	.geo-nav-button:hover {
+		background: var(--color-tertiary);
+		color: var(--color-primary);
+		transform: scale(1.05);
+	}
+
+	.geo-nav-button:active {
+		transform: scale(0.95);
+	}
+
+	.geo-nav-button.active {
+		background: var(--color-accent);
+		color: white;
+		border-color: var(--color-accent);
+		box-shadow: 0 2px 8px rgba(0, 113, 227, 0.2);
+	}
+
 	.search-box {
 		position: relative;
 		max-width: 300px;
@@ -193,6 +228,12 @@ const homeUrl = getHomeUrl(currentUrl);
 			gap: 1rem;
 		}
 		
+		.geo-nav-button {
+			width: 40px;
+			height: 40px;
+			font-size: 18px;
+		}
+		
 		.search-box {
 			max-width: 200px;
 		}
@@ -225,7 +266,7 @@ const homeUrl = getHomeUrl(currentUrl);
 </style>
 
 <script>
-	// Enhanced search functionality
+	// Enhanced search functionality and geo navigation
 	document.addEventListener('DOMContentLoaded', () => {
 		const searchInput = document.getElementById('search-input') as HTMLInputElement;
 		
@@ -251,30 +292,48 @@ const homeUrl = getHomeUrl(currentUrl);
 			});
 		}
 
-		// Set active navigation link based on current subdomain
+		// Geo navigation functionality
+		const geoButtons = document.querySelectorAll('.geo-nav-button');
+		geoButtons.forEach(button => {
+			button.addEventListener('click', (e) => {
+				e.preventDefault();
+				const targetGeo = button.getAttribute('data-geo');
+				const targetHref = button.getAttribute('data-href');
+				
+				if (!targetGeo || !targetHref) {
+					console.error('Missing geo data attributes');
+					return;
+				}
+				
+				console.log('🌍 Geo navigation clicked:', targetGeo, targetHref);
+				
+				// For localhost development, we need to handle this differently
+				if (window.location.hostname === 'localhost' || window.location.hostname.startsWith('127.0.0.1')) {
+					// In development, we can't use subdomains, so we'll use query parameters
+					const currentUrl = new URL(window.location.href);
+					currentUrl.searchParams.set('geo', targetGeo);
+					console.log('🔄 Redirecting to:', currentUrl.href);
+					window.location.href = currentUrl.href;
+				} else {
+					// In production, use the actual subdomain URL
+					console.log('🔄 Redirecting to:', targetHref);
+					window.location.href = targetHref;
+				}
+			});
+		});
+
+		// Set active navigation link based on current path
 		const navLinks = document.querySelectorAll('.site-header__nav-link');
-		const currentHostname = window.location.hostname;
-		
-		console.log('🎯 Setting active navigation link for hostname:', currentHostname);
+		const currentPath = window.location.pathname;
 		
 		navLinks.forEach(link => {
 			const href = link.getAttribute('href');
 			if (href) {
-				try {
-					const linkUrl = new URL(href);
-					const linkHostname = linkUrl.hostname;
-					
-					console.log('  Checking link:', href, 'hostname:', linkHostname);
-					
-					// Check if this link's hostname matches current hostname
-					if (linkHostname === currentHostname) {
-						console.log('  ✅ Active link found:', href);
-						link.classList.add('active');
-					} else {
-						link.classList.remove('active');
-					}
-				} catch (e) {
-					console.log('  ❌ Invalid URL:', href);
+				// Check if current path matches or starts with the link href
+				if (currentPath === href || (href !== '/' && currentPath.startsWith(href + '/'))) {
+					link.classList.add('active');
+				} else {
+					link.classList.remove('active');
 				}
 			}
 		});

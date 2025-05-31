@@ -31,10 +31,16 @@
     "cf-typegen": "wrangler types",
     "check": "astro build && tsc && wrangler deploy --dry-run",
     "deploy": "wrangler deploy",
+    "deploy:se": "wrangler deploy --config wrangler-se.json",
+    "deploy:no": "wrangler deploy --config wrangler-no.json",
+    "deploy:geo": "npm run deploy:se && npm run deploy:no",
     "dev": "astro dev",
     "preview": "astro build && wrangler dev",
+    "preview:se": "astro build && wrangler dev --config wrangler-se.json",
+    "preview:no": "astro build && wrangler dev --config wrangler-no.json",
     "process-uploaded": "node scripts/process-uploaded.js",
-    "publish": "npm run process-uploaded && npm run build && npm run deploy"
+    "publish": "npm run process-uploaded && npm run build && npm run deploy",
+    "publish:geo": "npm run process-uploaded && npm run build && npm run deploy:geo"
   },
   "type": "module"
 }

@@ -3,11 +3,13 @@ import { getCollection } from 'astro:content';
 import { SITE_TITLE, SITE_DESCRIPTION } from '../../consts.js';
 
 export async function GET(context) {
-  // Get all content from modeller collection
-  const modellerContent = await getCollection('modeller');
+  // Get all content from geo-based modeller collections
+  const seModellerContent = await getCollection('se-modeller');
+  const noModellerContent = await getCollection('no-modeller');
   
-  // Sort by date
-  const sortedContent = modellerContent
+  // Combine and sort by date
+  const allContent = [...seModellerContent, ...noModellerContent];
+  const sortedContent = allContent
     .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
 
   return rss({

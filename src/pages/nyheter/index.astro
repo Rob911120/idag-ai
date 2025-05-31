@@ -1,19 +1,19 @@
 ---
-import BaseHead from '../../components/BaseHead.astro';
-import Header from '../../components/Header.astro';
-import Footer from '../../components/Footer.astro';
-import HeroArticle from '../../components/news/HeroArticle.astro';
-import NewsGrid from '../../components/news/NewsGrid.astro';
-import NotificationBanner from '../../components/NotificationBanner.astro';
-import { SITE_TITLE, SITE_DESCRIPTION } from '../../consts';
+import BaseHead from '@/components/BaseHead.astro';
+import Header from '@/components/Header.astro';
+import Footer from '@/components/Footer.astro';
+import HeroArticle from '@/components/news/HeroArticle.astro';
+import NewsGrid from '@/components/news/NewsGrid.astro';
+import NotificationBanner from '@/components/NotificationBanner.astro';
+import { SITE_TITLE, SITE_DESCRIPTION } from '@/consts';
 import { getCollection } from 'astro:content';
 
-// Get all content from nyheter and news collections
-const nyhetarContent = await getCollection('nyheter');
-const newsContent = await getCollection('news');
+// Get all content from geo-based nyheter collections
+const seNyhetarContent = await getCollection('se-nyheter');
+const noNyhetarContent = await getCollection('no-nyheter');
 
 // Combine and sort by date
-const allNewsContent = [...nyhetarContent, ...newsContent]
+const allNewsContent = [...seNyhetarContent, ...noNyhetarContent]
   .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
 
 // Get featured/hero article
@@ -241,7 +241,7 @@ const pageDescription = "Håll dig uppdaterad med de senaste nyheterna inom arti
 
 		<!-- Enhanced Scripts -->
 		<script>
-			import { initScrollAnimations, initProgressiveImages } from '../../utils.js';
+			import { initScrollAnimations, initProgressiveImages } from '@/utils.js';
 			
 			document.addEventListener('DOMContentLoaded', () => {
 				initScrollAnimations();
