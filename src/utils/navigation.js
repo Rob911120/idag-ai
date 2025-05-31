@@ -61,12 +61,20 @@ export function getGeoNavigationItems(currentUrl = '') {
     { geoSubdomain: 'no', label: 'Norge', flag: '🇳🇴' },
   ];
   
-  return geoItems.map(item => ({
-    href: buildGeoSubdomainUrl(item.geoSubdomain, currentUrl),
-    label: item.label,
-    flag: item.flag,
-    geoSubdomain: item.geoSubdomain
-  }));
+  console.log('🔗 DEBUG: Building geo navigation items for URL:', currentUrl);
+  
+  const items = geoItems.map(item => {
+    const href = buildGeoSubdomainUrl(item.geoSubdomain, currentUrl);
+    console.log(`  ${item.geoSubdomain} (${item.flag}) -> ${href}`);
+    return {
+      href: href,
+      label: item.label,
+      flag: item.flag,
+      geoSubdomain: item.geoSubdomain
+    };
+  });
+  
+  return items;
 }
 
 // Get category navigation items for a specific geo subdomain

@@ -30,13 +30,13 @@ jobs:
       - name: Build Astro site
         run: npm run build
 
-      - name: Deploy Swedish worker (se.idag.ai)
+      - name: Deploy Swedish worker (*.workers.dev)
         run: npm run deploy:se
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
-      - name: Deploy Norwegian worker (no.idag.ai)
+      - name: Deploy Norwegian worker (*.workers.dev)
         run: npm run deploy:no
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -44,6 +44,6 @@ jobs:
 
       - name: Deployment Summary
         run: |
-          echo "✅ Successfully deployed both workers:"
-          echo "🇸🇪 Swedish: se.idag.ai"
-          echo "🇳🇴 Norwegian: no.idag.ai"
+          echo "✅ Successfully deployed both workers to .workers.dev domains:"
+          echo "🇸🇪 Swedish: se-idag-ai.workers.dev"
+          echo "🇳🇴 Norwegian: no-idag-ai.workers.dev"

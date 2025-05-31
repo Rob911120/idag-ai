@@ -1,13 +1,20 @@
 ---
 import { SITE_TITLE } from '../consts';
 import ThemeToggle from './ThemeToggle.astro';
-import { getCategoryNavigationItems, getCurrentGeoSubdomain } from '../utils/navigation-fixed.js';
+import { getCategoryNavigationItems } from '../utils/navigation-fixed.js';
 import { getGeoNavigationItems } from '../utils/navigation.js';
+import { detectSubdomain } from '../utils/subdomain.js';
 
-// Get navigation items with correct subdomain URLs
-// In Astro, we need to pass the current URL from the request
+// FIXED: Use same geo detection as index.astro for consistency
 const currentUrl = Astro.url.href;
-const currentGeo = getCurrentGeoSubdomain(currentUrl);
+const detectedGeoSubdomain = detectSubdomain(Astro.request, Astro.url);
+const currentGeo = detectedGeoSubdomain || 'se';
+
+console.log('🏠 DEBUG: HEADER - Geo Detection:');
+console.log('  Current URL:', currentUrl);
+console.log('  Detected geo:', detectedGeoSubdomain);
+console.log('  Final current geo:', currentGeo);
+
 const NAV_ITEMS = getCategoryNavigationItems(currentGeo, currentUrl);
 const GEO_ITEMS = getGeoNavigationItems(currentUrl);
 

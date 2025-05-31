@@ -1,6 +1,6 @@
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "no-idag-ai",
+	"name": "se-idag-ai",
 	"compatibility_date": "2025-04-01",
 	"compatibility_flags": [
 		"nodejs_compat"
@@ -14,9 +14,15 @@
 		"enabled": true
 	},
 	"upload_source_maps": true,
+	"routes": [
+		{
+			"pattern": "se.idag.ai/*",
+			"zone_name": "idag.ai"
+		}
+	],
 	"vars": {
-		"GEO_SUBDOMAIN": "no",
-		"SITE_LANGUAGE": "no",
-		"SITE_COUNTRY": "Norge"
+		"GEO_SUBDOMAIN": "se",
+		"SITE_LANGUAGE": "sv",
+		"SITE_COUNTRY": "Sverige"
 	}
 }

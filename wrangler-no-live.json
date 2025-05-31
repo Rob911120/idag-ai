@@ -14,6 +14,12 @@
 		"enabled": true
 	},
 	"upload_source_maps": true,
+	"routes": [
+		{
+			"pattern": "no.idag.ai/*",
+			"zone_name": "idag.ai"
+		}
+	],
 	"vars": {
 		"GEO_SUBDOMAIN": "no",
 		"SITE_LANGUAGE": "no",
