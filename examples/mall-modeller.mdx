@@ -1,0 +1,326 @@
+---
+title: "Claude 3.5 Sonnet - Komplett guide och recension"
+description: "Djupgående genomgång av Anthropics senaste språkmodell Claude 3.5 Sonnet. Prestanda, funktioner, prissättning och praktiska användningsområden."
+pubDate: 2024-05-31
+heroImage: "/blog-placeholder-2.jpg"
+heroImageAlt: "Claude 3.5 Sonnet AI-modell visualisering"
+country: "se"
+subdomain: "modeller"
+modelType: "llm"
+provider: "Anthropic"
+tags: ["Claude", "LLM", "Anthropic", "AI-modell"]
+hashtags: ["modeller", "recension"]
+featured: true
+readingTime: 12
+author: "idag.ai Redaktion"
+seoTitle: "Claude 3.5 Sonnet Guide - Funktioner, Priser & Test 2024"
+seoDescription: "Komplett guide till Claude 3.5 Sonnet. Testa funktioner, jämför priser och upptäck användningsområden för Anthropics kraftfulla AI-modell."
+pricing: {
+  free: true,
+  paid: true,
+  enterprise: true
+}
+capabilities: ["Textgenerering", "Kodning", "Analys", "Kreativt skrivande", "Problemlösning"]
+limitations: ["Kunskapsgräns", "Kontextlängd", "Bildgenerering"]
+difficulty: "medel"
+priority: 8
+---
+
+import { OptimizedImage } from '../src/components/OptimizedImage.astro';
+
+{/* Model Header */}
+<div className="section" style={{
+  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+  color: 'white',
+  textAlign: 'center'
+}}>
+  <div className="container">
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--spacing-md)', marginBottom: 'var(--spacing-md)' }}>
+      <div style={{
+        background: 'rgba(255,255,255,0.2)',
+        padding: 'var(--spacing-sm)',
+        borderRadius: 'var(--border-radius)',
+        fontSize: '2rem'
+      }}>
+        🤖
+      </div>
+      <h1 className="typography-hero" style={{ color: 'white', margin: 0 }}>
+        Claude 3.5 Sonnet
+      </h1>
+    </div>
+    <p className="typography-h3" style={{ color: 'rgba(255,255,255,0.9)', fontWeight: 'var(--font-weight-light)' }}>
+      Anthropics mest avancerade språkmodell
+    </p>
+  </div>
+</div>
+
+{/* Quick Stats */}
+<div className="news-grid news-grid--three-columns" style={{ margin: 'var(--spacing-xl) 0' }}>
+  <div className="news-card" style={{ textAlign: 'center', padding: 'var(--spacing-lg)' }}>
+    <div style={{ fontSize: '2.5rem', marginBottom: 'var(--spacing-sm)' }}>⚡</div>
+    <h3 className="typography-h3" style={{ color: 'var(--color-accent)' }}>Snabb</h3>
+    <p className="typography-body">2x snabbare än Claude 3 Opus</p>
+  </div>
+  
+  <div className="news-card" style={{ textAlign: 'center', padding: 'var(--spacing-lg)' }}>
+    <div style={{ fontSize: '2.5rem', marginBottom: 'var(--spacing-sm)' }}>🧠</div>
+    <h3 className="typography-h3" style={{ color: 'var(--color-success)' }}>Smart</h3>
+    <p className="typography-body">200K tokens kontext</p>
+  </div>
+  
+  <div className="news-card" style={{ textAlign: 'center', padding: 'var(--spacing-lg)' }}>
+    <div style={{ fontSize: '2.5rem', marginBottom: 'var(--spacing-sm)' }}>💰</div>
+    <h3 className="typography-h3" style={{ color: 'var(--color-warning)' }}>Prisvärd</h3>
+    <p className="typography-body">Gratis tier tillgänglig</p>
+  </div>
+</div>
+
+## Översikt
+
+Claude 3.5 Sonnet representerar **nästa generation** av språkmodeller från Anthropic. Med förbättrad prestanda, snabbare svarstider och utökade funktioner sätter den nya standarder för AI-assistenter.
+
+{/* Feature Comparison Table */}
+<div style={{
+  background: 'var(--color-surface)',
+  padding: 'var(--spacing-lg)',
+  borderRadius: 'var(--border-radius-lg)',
+  margin: 'var(--spacing-lg) 0',
+  overflow: 'auto'
+}}>
+  <h3 className="typography-h2" style={{ marginBottom: 'var(--spacing-md)' }}>📊 Jämförelse med andra modeller</h3>
+  
+  <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+    <thead>
+      <tr style={{ borderBottom: '2px solid var(--color-border)' }}>
+        <th style={{ padding: 'var(--spacing-sm)', textAlign: 'left' }}>Modell</th>
+        <th style={{ padding: 'var(--spacing-sm)', textAlign: 'center' }}>Kontext</th>
+        <th style={{ padding: 'var(--spacing-sm)', textAlign: 'center' }}>Hastighet</th>
+        <th style={{ padding: 'var(--spacing-sm)', textAlign: 'center' }}>Pris</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style={{ background: 'var(--color-accent)', color: 'white' }}>
+        <td style={{ padding: 'var(--spacing-sm)', fontWeight: 'var(--font-weight-semibold)' }}>Claude 3.5 Sonnet</td>
+        <td style={{ padding: 'var(--spacing-sm)', textAlign: 'center' }}>200K</td>
+        <td style={{ padding: 'var(--spacing-sm)', textAlign: 'center' }}>⚡⚡⚡</td>
+        <td style={{ padding: 'var(--spacing-sm)', textAlign: 'center' }}>$$</td>
+      </tr>
+      <tr>
+        <td style={{ padding: 'var(--spacing-sm)' }}>GPT-4 Turbo</td>
+        <td style={{ padding: 'var(--spacing-sm)', textAlign: 'center' }}>128K</td>
+        <td style={{ padding: 'var(--spacing-sm)', textAlign: 'center' }}>⚡⚡</td>
+        <td style={{ padding: 'var(--spacing-sm)', textAlign: 'center' }}>$$$</td>
+      </tr>
+      <tr>
+        <td style={{ padding: 'var(--spacing-sm)' }}>Gemini Pro</td>
+        <td style={{ padding: 'var(--spacing-sm)', textAlign: 'center' }}>32K</td>
+        <td style={{ padding: 'var(--spacing-sm)', textAlign: 'center' }}>⚡⚡⚡</td>
+        <td style={{ padding: 'var(--spacing-sm)', textAlign: 'center' }}>$</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+## Funktioner & Kapaciteter
+
+### 🎯 Styrkor
+
+<div className="news-grid">
+  <div className="news-card">
+    <div style={{ padding: 'var(--spacing-md)' }}>
+      <h4 className="typography-h3" style={{ color: 'var(--color-success)', marginBottom: 'var(--spacing-sm)' }}>
+        💻 Kodning
+      </h4>
+      <p className="typography-body">Exceptionell prestanda inom programmering och debugging. Stödjer 50+ programmeringsspråk.</p>
+      <div style={{
+        background: 'var(--color-surface)',
+        padding: 'var(--spacing-sm)',
+        borderRadius: 'var(--border-radius-sm)',
+        marginTop: 'var(--spacing-sm)',
+        fontFamily: 'monospace',
+        fontSize: 'var(--font-size-small)'
+      }}>
+        <strong>Betyg:</strong> 9.2/10
+      </div>
+    </div>
+  </div>
+  
+  <div className="news-card">
+    <div style={{ padding: 'var(--spacing-md)' }}>
+      <h4 className="typography-h3" style={{ color: 'var(--color-accent)', marginBottom: 'var(--spacing-sm)' }}>
+        📝 Skrivande
+      </h4>
+      <p className="typography-body">Kreativt och tekniskt skrivande på hög nivå. Anpassar stil och ton perfekt.</p>
+      <div style={{
+        background: 'var(--color-surface)',
+        padding: 'var(--spacing-sm)',
+        borderRadius: 'var(--border-radius-sm)',
+        marginTop: 'var(--spacing-sm)',
+        fontFamily: 'monospace',
+        fontSize: 'var(--font-size-small)'
+      }}>
+        <strong>Betyg:</strong> 9.5/10
+      </div>
+    </div>
+  </div>
+  
+  <div className="news-card">
+    <div style={{ padding: 'var(--spacing-md)' }}>
+      <h4 className="typography-h3" style={{ color: 'var(--color-warning)', marginBottom: 'var(--spacing-sm)' }}>
+        🔍 Analys
+      </h4>
+      <p className="typography-body">Djup textanalys, databearbetning och logisk resonering.</p>
+      <div style={{
+        background: 'var(--color-surface)',
+        padding: 'var(--spacing-sm)',
+        borderRadius: 'var(--border-radius-sm)',
+        marginTop: 'var(--spacing-sm)',
+        fontFamily: 'monospace',
+        fontSize: 'var(--font-size-small)'
+      }}>
+        <strong>Betyg:</strong> 8.8/10
+      </div>
+    </div>
+  </div>
+</div>
+
+### ⚠️ Begränsningar
+
+<div style={{
+  background: 'var(--color-warning)',
+  color: 'white',
+  padding: 'var(--spacing-md)',
+  borderRadius: 'var(--border-radius)',
+  margin: 'var(--spacing-lg) 0'
+}}>
+  <h4 className="typography-h3" style={{ color: 'white', marginBottom: 'var(--spacing-sm)' }}>
+    Viktigt att veta
+  </h4>
+  <ul style={{ margin: 0, paddingLeft: 'var(--spacing-md)' }}>
+    <li>**Kunskapsgräns**: April 2024</li>
+    <li>**Ingen bildgenerering**: Endast textbaserad</li>
+    <li>**Internetåtkomst**: Begränsad realtidsdata</li>
+    <li>**Kontextlängd**: Max 200K tokens per session</li>
+  </ul>
+</div>
+
+## Prissättning
+
+<div className="news-grid news-grid--three-columns">
+  <div className="news-card" style={{ border: '2px solid var(--color-border)' }}>
+    <div style={{ padding: 'var(--spacing-lg)', textAlign: 'center' }}>
+      <h4 className="typography-h2" style={{ color: 'var(--color-success)' }}>Gratis</h4>
+      <div style={{ fontSize: '2rem', fontWeight: 'var(--font-weight-bold)', margin: 'var(--spacing-sm) 0' }}>
+        0 SEK
+      </div>
+      <ul style={{ textAlign: 'left', paddingLeft: 'var(--spacing-md)' }}>
+        <li>Begränsade meddelanden/dag</li>
+        <li>Grundläggande funktioner</li>
+        <li>Community support</li>
+      </ul>
+    </div>
+  </div>
+  
+  <div className="news-card" style={{ border: '2px solid var(--color-accent)', transform: 'scale(1.05)' }}>
+    <div style={{ 
+      background: 'var(--color-accent)', 
+      color: 'white', 
+      padding: 'var(--spacing-sm)', 
+      textAlign: 'center',
+      fontSize: 'var(--font-size-small)',
+      fontWeight: 'var(--font-weight-semibold)'
+    }}>
+      POPULÄRAST
+    </div>
+    <div style={{ padding: 'var(--spacing-lg)', textAlign: 'center' }}>
+      <h4 className="typography-h2" style={{ color: 'var(--color-accent)' }}>Pro</h4>
+      <div style={{ fontSize: '2rem', fontWeight: 'var(--font-weight-bold)', margin: 'var(--spacing-sm) 0' }}>
+        200 SEK<span style={{ fontSize: '1rem', color: 'var(--color-secondary)' }}>/månad</span>
+      </div>
+      <ul style={{ textAlign: 'left', paddingLeft: 'var(--spacing-md)' }}>
+        <li>Obegränsade meddelanden</li>
+        <li>Alla funktioner</li>
+        <li>Prioriterad support</li>
+        <li>API-åtkomst</li>
+      </ul>
+    </div>
+  </div>
+  
+  <div className="news-card" style={{ border: '2px solid var(--color-border)' }}>
+    <div style={{ padding: 'var(--spacing-lg)', textAlign: 'center' }}>
+      <h4 className="typography-h2" style={{ color: 'var(--color-secondary)' }}>Enterprise</h4>
+      <div style={{ fontSize: '2rem', fontWeight: 'var(--font-weight-bold)', margin: 'var(--spacing-sm) 0' }}>
+        Kontakta
+      </div>
+      <ul style={{ textAlign: 'left', paddingLeft: 'var(--spacing-md)' }}>
+        <li>Anpassade lösningar</li>
+        <li>Dedikerad support</li>
+        <li>SLA-garantier</li>
+        <li>Säkerhetsintegration</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+## Praktiska användningsområden
+
+{/* Use Cases */}
+<div style={{ margin: 'var(--spacing-xl) 0' }}>
+  <h3 className="typography-h2">🎯 Bäst för:</h3>
+  
+  <div className="news-grid">
+    <div style={{
+      background: 'linear-gradient(45deg, var(--color-accent), var(--color-primary))',
+      color: 'white',
+      padding: 'var(--spacing-lg)',
+      borderRadius: 'var(--border-radius-lg)'
+    }}>
+      <h4 className="typography-h3" style={{ color: 'white' }}>👨‍💻 Utvecklare</h4>
+      <p>Kodgranskning, debugging, arkitekturdesign och dokumentation.</p>
+    </div>
+    
+    <div style={{
+      background: 'linear-gradient(45deg, var(--color-success), var(--color-accent))',
+      color: 'white',
+      padding: 'var(--spacing-lg)',
+      borderRadius: 'var(--border-radius-lg)'
+    }}>
+      <h4 className="typography-h3" style={{ color: 'white' }}>✍️ Skribenter</h4>
+      <p>Kreativt skrivande, redigering, översättning och innehållsstrategi.</p>
+    </div>
+    
+    <div style={{
+      background: 'linear-gradient(45deg, var(--color-warning), var(--color-success))',
+      color: 'white',
+      padding: 'var(--spacing-lg)',
+      borderRadius: 'var(--border-radius-lg)'
+    }}>
+      <h4 className="typography-h3" style={{ color: 'white' }}>📊 Analytiker</h4>
+      <p>Dataanalys, rapportgenerering och affärsintelligens.</p>
+    </div>
+  </div>
+</div>
+
+## Slutbetyg
+
+<div style={{
+  background: 'var(--color-accent)',
+  color: 'white',
+  padding: 'var(--spacing-xl)',
+  borderRadius: 'var(--border-radius-lg)',
+  textAlign: 'center',
+  margin: 'var(--spacing-xl) 0'
+}}>
+  <div style={{ fontSize: '4rem', marginBottom: 'var(--spacing-md)' }}>9.1</div>
+  <h3 className="typography-h2" style={{ color: 'white', marginBottom: 'var(--spacing-sm)' }}>
+    Utmärkt
+  </h3>
+  <p className="typography-body" style={{ color: 'rgba(255,255,255,0.9)' }}>
+    Claude 3.5 Sonnet är en av de bästa språkmodellerna på marknaden. 
+    Perfekt balans mellan prestanda, hastighet och pris.
+  </p>
+</div>
+
+---
+
+**Rekommendation:** Claude 3.5 Sonnet är ett utmärkt val för både nybörjare och professionella användare som söker en kraftfull och pålitlig AI-assistent.
